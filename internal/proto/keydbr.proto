@@ -1,0 +1,110 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.robaho.keydbr";
+option java_outer_classname = "KeyDBRemoteProto";
+
+package remote;
+
+service Keydb {
+    rpc Connection (stream InMessage) returns (stream OutMessage) {}
+}
+
+message InMessage {
+    oneof request {
+        OpenRequest open = 1;
+        RemoveRequest remove = 2;
+        CloseRequest close = 3;
+        GetRequest get = 4;
+        PutRequest put = 5;
+        BeginRequest begin = 6;
+        CommitRequest commit = 7;
+    }
+}
+
+message OutMessage {
+    oneof reply {
+        OpenReply open = 1;
+        RemoveReply remove = 2;
+        CloseReply close = 3;
+        GetReply get = 4;
+        PutReply put = 5;
+        BeginReply begin = 6;
+        CommitReply commit = 7;
+    }
+}
+
+message OpenRequest {
+    string dbname = 1;
+    bool create = 2;
+}
+
+message OpenReply {
+    string error = 2;
+}
+
+message RemoveRequest {
+    string dbname = 1;
+}
+
+message RemoveReply {
+    string error = 1;
+}
+
+message CloseRequest {
+}
+
+message CloseReply {
+    string error = 1;
+}
+
+message GetRequest {
+    int32 txid = 1;
+    bytes key = 2;
+}
+
+message GetReply {
+    bytes value = 1;
+    string error = 2;
+}
+
+message PutRequest {
+    int32 txid = 1;
+    bytes key = 2;
+    bytes value = 3;
+}
+
+message PutReply {
+    string error = 1;
+}
+
+message BeginRequest {
+    string table = 2;
+}
+
+message BeginReply {
+    string error = 2;
+}
+
+message CommitRequest {
+    int32 txid = 1;
+    bool sync = 2;
+}
+
+message CommitReply {
+    string error = 1;
+}
