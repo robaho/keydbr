@@ -9,7 +9,7 @@ upon which all requests are multiplexed. The client API automatically locks the 
 acknowledged, but this may change in the future to allow overlapping requests - that is, asynchronous handling
 by the server.
 
-**To Use*
+**To Use**
 
 go run cmd/server
 
