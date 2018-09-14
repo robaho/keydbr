@@ -15,6 +15,11 @@ type RemoteDatabase struct {
 	stream  pb.Keydb_ConnectionClient
 }
 
+type RemoteTransaction struct {
+	txid uint64
+	db   *RemoteDatabase
+}
+
 func Open(addr string, dbname string, createIfNeeded bool, timeout int) (*RemoteDatabase, error) {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -80,4 +85,105 @@ func (db *RemoteDatabase) Close() error {
 	}
 
 	return nil
+}
+
+func (db *RemoteDatabase) Begin(table string) (*RemoteTransaction, error) {
+
+	request := &pb.InMessage_Begin{Begin: &pb.BeginRequest{Table: table}}
+
+	err := db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return nil, err
+	}
+
+	msg, err := db.stream.Recv()
+	if err != nil {
+		return nil, err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Begin).Begin
+
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+
+	rtx := new(RemoteTransaction)
+	rtx.txid = response.Txid
+	rtx.db = db
+
+	return rtx, nil
+}
+
+func (tx *RemoteTransaction) Get(key []byte) ([]byte, error) {
+	request := &pb.InMessage_Get{Get: &pb.GetRequest{Txid: tx.txid, Key: key}}
+
+	err := tx.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return nil, err
+	}
+
+	msg, err := tx.db.stream.Recv()
+	if err != nil {
+		return nil, err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Get).Get
+
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+
+	return response.Value, nil
+}
+
+func (tx *RemoteTransaction) Put(key []byte, value []byte) error {
+	request := &pb.InMessage_Put{Put: &pb.PutRequest{Txid: tx.txid, Key: key, Value: value}}
+
+	err := tx.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return err
+	}
+
+	msg, err := tx.db.stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Put).Put
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+
+	return nil
+}
+
+func (tx *RemoteTransaction) commitOption(sync bool) error {
+	request := &pb.InMessage_Commit{Commit: &pb.CommitRequest{Txid: tx.txid, Sync: sync}}
+
+	err := tx.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return err
+	}
+
+	msg, err := tx.db.stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Commit).Commit
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+
+	return nil
+}
+
+func (tx *RemoteTransaction) Commit() error {
+	return tx.commitOption(false)
+}
+
+func (tx *RemoteTransaction) CommitSync() error {
+	return tx.commitOption(true)
 }

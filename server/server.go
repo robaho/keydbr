@@ -15,35 +15,27 @@ type openDatabase struct {
 	fullpath string
 }
 
-type state struct {
-	dbname string
+type connstate struct {
+	db  *openDatabase
+	txs map[uint64]*keydb.Transaction
 }
 
 type Server struct {
 	sync.Mutex
 	path   string
 	opendb map[string]*openDatabase
-	nextid int
-	states map[int]*state // map of connection id to connection state
 }
 
 func NewServer(dbpath string) *Server {
-	s := Server{path: dbpath, opendb: make(map[string]*openDatabase), states: make(map[int]*state)}
+	s := Server{path: dbpath, opendb: make(map[string]*openDatabase)}
 	return &s
 }
 
 func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
-	s.Lock()
-	s.nextid++
-	id := s.nextid
-	s.Unlock()
+	state := connstate{txs: make(map[uint64]*keydb.Transaction)}
 
-	state := state{}
-
-	s.states[id] = &state
-
-	defer s.closedb(id)
+	defer s.closedb(&state)
 
 	for {
 		msg, err := conn.Recv()
@@ -54,11 +46,19 @@ func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
 		switch msg.Request.(type) {
 		case *pb.InMessage_Open:
-			err = s.open(conn, id, msg.GetRequest().(*pb.InMessage_Open).Open)
+			err = s.open(conn, &state, msg.GetRequest().(*pb.InMessage_Open).Open)
 		case *pb.InMessage_Close:
-			err = s.closedb(id)
+			err = s.closedb(&state)
 			reply := &pb.OutMessage_Close{Close: &pb.CloseReply{Error: toErrS(err)}}
 			err = conn.Send(&pb.OutMessage{Reply: reply})
+		case *pb.InMessage_Begin:
+			err = s.begin(conn, &state, msg.GetRequest().(*pb.InMessage_Begin).Begin)
+		case *pb.InMessage_Commit:
+			err = s.commit(conn, &state, msg.GetRequest().(*pb.InMessage_Commit).Commit)
+		case *pb.InMessage_Get:
+			err = s.get(conn, &state, msg.GetRequest().(*pb.InMessage_Get).Get)
+		case *pb.InMessage_Put:
+			err = s.put(conn, &state, msg.GetRequest().(*pb.InMessage_Put).Put)
 		}
 
 		if err != nil {
@@ -75,18 +75,16 @@ func toErrS(err error) string {
 }
 
 // clean up database references
-func (s *Server) closedb(id int) error {
+func (s *Server) closedb(state *connstate) error {
 	s.Lock()
 	defer s.Unlock()
 
-	state, ok := s.states[id]
-	if !ok {
-		return nil
+	if state.db == nil {
+		return nil // already closed or never opened
 	}
 
-	fullpath := state.dbname
-
-	defer delete(s.states, id)
+	fullpath := state.db.fullpath
+	state.db = nil
 
 	opendb, ok := s.opendb[fullpath]
 	if !ok || opendb.refcount == 0 {
@@ -105,7 +103,7 @@ func (s *Server) closedb(id int) error {
 	return nil
 }
 
-func (s *Server) open(conn pb.Keydb_ConnectionServer, id int, in *pb.OpenRequest) error {
+func (s *Server) open(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.OpenRequest) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -128,11 +126,67 @@ func (s *Server) open(conn pb.Keydb_ConnectionServer, id int, in *pb.OpenRequest
 		log.Println("database already open, returning ref", in)
 	}
 
-	s.states[id].dbname = fullpath
+	state.db = opendb
 
 	reply := &pb.OutMessage_Open{Open: &pb.OpenReply{Error: ""}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
 
-	err := conn.Send(&pb.OutMessage{Reply: reply})
+func (s *Server) begin(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.BeginRequest) error {
 
-	return err
+	var id uint64 = 0
+	tx, err := state.db.db.BeginTX(in.Table)
+	if err == nil {
+		id = tx.GetID()
+		state.txs[id] = tx
+	}
+	reply := &pb.OutMessage_Begin{Begin: &pb.BeginReply{Txid: id, Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+func (s *Server) commit(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.CommitRequest) error {
+
+	var err error
+	tx, ok := state.txs[in.Txid]
+	if !ok {
+		err = errors.New("invalid tx id")
+	} else {
+		if in.Sync {
+			err = tx.CommitSync()
+		} else {
+			err = tx.Commit()
+		}
+		delete(state.txs, in.Txid)
+	}
+
+	reply := &pb.OutMessage_Commit{Commit: &pb.CommitReply{Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+
+func (s *Server) get(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.GetRequest) error {
+
+	var err error
+	var value []byte
+	tx, ok := state.txs[in.Txid]
+	if !ok {
+		err = errors.New("invalid tx id")
+	} else {
+		value, err = tx.Get(in.Key)
+	}
+
+	reply := &pb.OutMessage_Get{Get: &pb.GetReply{Value: value, Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+
+func (s *Server) put(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.PutRequest) error {
+
+	var err error
+	tx, ok := state.txs[in.Txid]
+	if !ok {
+		err = errors.New("invalid tx id")
+	} else {
+		err = tx.Put(in.Key, in.Value)
+	}
+
+	reply := &pb.OutMessage_Put{Put: &pb.PutReply{Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
 }

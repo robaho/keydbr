@@ -73,7 +73,7 @@ message CloseReply {
 }
 
 message GetRequest {
-    int32 txid = 1;
+    uint64 txid = 1;
     bytes key = 2;
 }
 
@@ -83,7 +83,7 @@ message GetReply {
 }
 
 message PutRequest {
-    int32 txid = 1;
+    uint64 txid = 1;
     bytes key = 2;
     bytes value = 3;
 }
@@ -97,11 +97,12 @@ message BeginRequest {
 }
 
 message BeginReply {
+    uint64 txid = 1;
     string error = 2;
 }
 
 message CommitRequest {
-    int32 txid = 1;
+    uint64 txid = 1;
     bool sync = 2;
 }
 
