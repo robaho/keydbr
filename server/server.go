@@ -35,7 +35,7 @@ func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
 	state := connstate{txs: make(map[uint64]*keydb.Transaction)}
 
-	defer s.closedb(&state)
+	defer s.closedb(&state, true)
 
 	for {
 		msg, err := conn.Recv()
@@ -48,13 +48,15 @@ func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 		case *pb.InMessage_Open:
 			err = s.open(conn, &state, msg.GetRequest().(*pb.InMessage_Open).Open)
 		case *pb.InMessage_Close:
-			err = s.closedb(&state)
+			err = s.closedb(&state, false)
 			reply := &pb.OutMessage_Close{Close: &pb.CloseReply{Error: toErrS(err)}}
 			err = conn.Send(&pb.OutMessage{Reply: reply})
 		case *pb.InMessage_Begin:
 			err = s.begin(conn, &state, msg.GetRequest().(*pb.InMessage_Begin).Begin)
 		case *pb.InMessage_Commit:
 			err = s.commit(conn, &state, msg.GetRequest().(*pb.InMessage_Commit).Commit)
+		case *pb.InMessage_Rollback:
+			err = s.rollback(conn, &state, msg.GetRequest().(*pb.InMessage_Rollback).Rollback)
 		case *pb.InMessage_Get:
 			err = s.get(conn, &state, msg.GetRequest().(*pb.InMessage_Get).Get)
 		case *pb.InMessage_Put:
@@ -75,7 +77,7 @@ func toErrS(err error) string {
 }
 
 // clean up database references
-func (s *Server) closedb(state *connstate) error {
+func (s *Server) closedb(state *connstate, rollback bool) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -89,6 +91,12 @@ func (s *Server) closedb(state *connstate) error {
 	opendb, ok := s.opendb[fullpath]
 	if !ok || opendb.refcount == 0 {
 		return errors.New("database is ot open")
+	}
+
+	if rollback == true {
+		for _, tx := range state.txs {
+			tx.Rollback()
+		}
 	}
 
 	log.Println("closing database", fullpath)
@@ -155,10 +163,29 @@ func (s *Server) commit(conn pb.Keydb_ConnectionServer, state *connstate, in *pb
 		} else {
 			err = tx.Commit()
 		}
-		delete(state.txs, in.Txid)
+		if err != nil {
+			delete(state.txs, in.Txid)
+		}
 	}
 
 	reply := &pb.OutMessage_Commit{Commit: &pb.CommitReply{Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+
+func (s *Server) rollback(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.RollbackRequest) error {
+
+	var err error
+	tx, ok := state.txs[in.Txid]
+	if !ok {
+		err = errors.New("invalid tx id")
+	} else {
+		err = tx.Rollback()
+		if err != nil {
+			delete(state.txs, in.Txid)
+		}
+	}
+
+	reply := &pb.OutMessage_Rollback{Rollback: &pb.RollbackReply{Error: toErrS(err)}}
 	return conn.Send(&pb.OutMessage{Reply: reply})
 }
 

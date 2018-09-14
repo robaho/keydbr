@@ -32,6 +32,7 @@ type InMessage struct {
 	//	*InMessage_Put
 	//	*InMessage_Begin
 	//	*InMessage_Commit
+	//	*InMessage_Rollback
 	Request              isInMessage_Request `protobuf_oneof:"request"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
@@ -42,7 +43,7 @@ func (m *InMessage) Reset()         { *m = InMessage{} }
 func (m *InMessage) String() string { return proto.CompactTextString(m) }
 func (*InMessage) ProtoMessage()    {}
 func (*InMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{0}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{0}
 }
 func (m *InMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_InMessage.Unmarshal(m, b)
@@ -94,6 +95,10 @@ type InMessage_Commit struct {
 	Commit *CommitRequest `protobuf:"bytes,7,opt,name=commit,proto3,oneof"`
 }
 
+type InMessage_Rollback struct {
+	Rollback *RollbackRequest `protobuf:"bytes,8,opt,name=rollback,proto3,oneof"`
+}
+
 func (*InMessage_Open) isInMessage_Request() {}
 
 func (*InMessage_Remove) isInMessage_Request() {}
@@ -107,6 +112,8 @@ func (*InMessage_Put) isInMessage_Request() {}
 func (*InMessage_Begin) isInMessage_Request() {}
 
 func (*InMessage_Commit) isInMessage_Request() {}
+
+func (*InMessage_Rollback) isInMessage_Request() {}
 
 func (m *InMessage) GetRequest() isInMessage_Request {
 	if m != nil {
@@ -164,6 +171,13 @@ func (m *InMessage) GetCommit() *CommitRequest {
 	return nil
 }
 
+func (m *InMessage) GetRollback() *RollbackRequest {
+	if x, ok := m.GetRequest().(*InMessage_Rollback); ok {
+		return x.Rollback
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*InMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _InMessage_OneofMarshaler, _InMessage_OneofUnmarshaler, _InMessage_OneofSizer, []interface{}{
@@ -174,6 +188,7 @@ func (*InMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) err
 		(*InMessage_Put)(nil),
 		(*InMessage_Begin)(nil),
 		(*InMessage_Commit)(nil),
+		(*InMessage_Rollback)(nil),
 	}
 }
 
@@ -214,6 +229,11 @@ func _InMessage_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *InMessage_Commit:
 		b.EncodeVarint(7<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.Commit); err != nil {
+			return err
+		}
+	case *InMessage_Rollback:
+		b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Rollback); err != nil {
 			return err
 		}
 	case nil:
@@ -282,6 +302,14 @@ func _InMessage_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buff
 		err := b.DecodeMessage(msg)
 		m.Request = &InMessage_Commit{msg}
 		return true, err
+	case 8: // request.rollback
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RollbackRequest)
+		err := b.DecodeMessage(msg)
+		m.Request = &InMessage_Rollback{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -326,6 +354,11 @@ func _InMessage_OneofSizer(msg proto.Message) (n int) {
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *InMessage_Rollback:
+		s := proto.Size(x.Rollback)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
@@ -342,6 +375,7 @@ type OutMessage struct {
 	//	*OutMessage_Put
 	//	*OutMessage_Begin
 	//	*OutMessage_Commit
+	//	*OutMessage_Rollback
 	Reply                isOutMessage_Reply `protobuf_oneof:"reply"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
@@ -352,7 +386,7 @@ func (m *OutMessage) Reset()         { *m = OutMessage{} }
 func (m *OutMessage) String() string { return proto.CompactTextString(m) }
 func (*OutMessage) ProtoMessage()    {}
 func (*OutMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{1}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{1}
 }
 func (m *OutMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OutMessage.Unmarshal(m, b)
@@ -404,6 +438,10 @@ type OutMessage_Commit struct {
 	Commit *CommitReply `protobuf:"bytes,7,opt,name=commit,proto3,oneof"`
 }
 
+type OutMessage_Rollback struct {
+	Rollback *RollbackReply `protobuf:"bytes,8,opt,name=rollback,proto3,oneof"`
+}
+
 func (*OutMessage_Open) isOutMessage_Reply() {}
 
 func (*OutMessage_Remove) isOutMessage_Reply() {}
@@ -417,6 +455,8 @@ func (*OutMessage_Put) isOutMessage_Reply() {}
 func (*OutMessage_Begin) isOutMessage_Reply() {}
 
 func (*OutMessage_Commit) isOutMessage_Reply() {}
+
+func (*OutMessage_Rollback) isOutMessage_Reply() {}
 
 func (m *OutMessage) GetReply() isOutMessage_Reply {
 	if m != nil {
@@ -474,6 +514,13 @@ func (m *OutMessage) GetCommit() *CommitReply {
 	return nil
 }
 
+func (m *OutMessage) GetRollback() *RollbackReply {
+	if x, ok := m.GetReply().(*OutMessage_Rollback); ok {
+		return x.Rollback
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*OutMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _OutMessage_OneofMarshaler, _OutMessage_OneofUnmarshaler, _OutMessage_OneofSizer, []interface{}{
@@ -484,6 +531,7 @@ func (*OutMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) er
 		(*OutMessage_Put)(nil),
 		(*OutMessage_Begin)(nil),
 		(*OutMessage_Commit)(nil),
+		(*OutMessage_Rollback)(nil),
 	}
 }
 
@@ -524,6 +572,11 @@ func _OutMessage_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *OutMessage_Commit:
 		b.EncodeVarint(7<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.Commit); err != nil {
+			return err
+		}
+	case *OutMessage_Rollback:
+		b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Rollback); err != nil {
 			return err
 		}
 	case nil:
@@ -592,6 +645,14 @@ func _OutMessage_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buf
 		err := b.DecodeMessage(msg)
 		m.Reply = &OutMessage_Commit{msg}
 		return true, err
+	case 8: // reply.rollback
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RollbackReply)
+		err := b.DecodeMessage(msg)
+		m.Reply = &OutMessage_Rollback{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -636,6 +697,11 @@ func _OutMessage_OneofSizer(msg proto.Message) (n int) {
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *OutMessage_Rollback:
+		s := proto.Size(x.Rollback)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
@@ -655,7 +721,7 @@ func (m *OpenRequest) Reset()         { *m = OpenRequest{} }
 func (m *OpenRequest) String() string { return proto.CompactTextString(m) }
 func (*OpenRequest) ProtoMessage()    {}
 func (*OpenRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{2}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{2}
 }
 func (m *OpenRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OpenRequest.Unmarshal(m, b)
@@ -700,7 +766,7 @@ func (m *OpenReply) Reset()         { *m = OpenReply{} }
 func (m *OpenReply) String() string { return proto.CompactTextString(m) }
 func (*OpenReply) ProtoMessage()    {}
 func (*OpenReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{3}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{3}
 }
 func (m *OpenReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OpenReply.Unmarshal(m, b)
@@ -738,7 +804,7 @@ func (m *RemoveRequest) Reset()         { *m = RemoveRequest{} }
 func (m *RemoveRequest) String() string { return proto.CompactTextString(m) }
 func (*RemoveRequest) ProtoMessage()    {}
 func (*RemoveRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{4}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{4}
 }
 func (m *RemoveRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveRequest.Unmarshal(m, b)
@@ -776,7 +842,7 @@ func (m *RemoveReply) Reset()         { *m = RemoveReply{} }
 func (m *RemoveReply) String() string { return proto.CompactTextString(m) }
 func (*RemoveReply) ProtoMessage()    {}
 func (*RemoveReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{5}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{5}
 }
 func (m *RemoveReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveReply.Unmarshal(m, b)
@@ -813,7 +879,7 @@ func (m *CloseRequest) Reset()         { *m = CloseRequest{} }
 func (m *CloseRequest) String() string { return proto.CompactTextString(m) }
 func (*CloseRequest) ProtoMessage()    {}
 func (*CloseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{6}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{6}
 }
 func (m *CloseRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloseRequest.Unmarshal(m, b)
@@ -844,7 +910,7 @@ func (m *CloseReply) Reset()         { *m = CloseReply{} }
 func (m *CloseReply) String() string { return proto.CompactTextString(m) }
 func (*CloseReply) ProtoMessage()    {}
 func (*CloseReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{7}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{7}
 }
 func (m *CloseReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloseReply.Unmarshal(m, b)
@@ -883,7 +949,7 @@ func (m *GetRequest) Reset()         { *m = GetRequest{} }
 func (m *GetRequest) String() string { return proto.CompactTextString(m) }
 func (*GetRequest) ProtoMessage()    {}
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{8}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{8}
 }
 func (m *GetRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetRequest.Unmarshal(m, b)
@@ -929,7 +995,7 @@ func (m *GetReply) Reset()         { *m = GetReply{} }
 func (m *GetReply) String() string { return proto.CompactTextString(m) }
 func (*GetReply) ProtoMessage()    {}
 func (*GetReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{9}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{9}
 }
 func (m *GetReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetReply.Unmarshal(m, b)
@@ -976,7 +1042,7 @@ func (m *PutRequest) Reset()         { *m = PutRequest{} }
 func (m *PutRequest) String() string { return proto.CompactTextString(m) }
 func (*PutRequest) ProtoMessage()    {}
 func (*PutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{10}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{10}
 }
 func (m *PutRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PutRequest.Unmarshal(m, b)
@@ -1028,7 +1094,7 @@ func (m *PutReply) Reset()         { *m = PutReply{} }
 func (m *PutReply) String() string { return proto.CompactTextString(m) }
 func (*PutReply) ProtoMessage()    {}
 func (*PutReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{11}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{11}
 }
 func (m *PutReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PutReply.Unmarshal(m, b)
@@ -1066,7 +1132,7 @@ func (m *BeginRequest) Reset()         { *m = BeginRequest{} }
 func (m *BeginRequest) String() string { return proto.CompactTextString(m) }
 func (*BeginRequest) ProtoMessage()    {}
 func (*BeginRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{12}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{12}
 }
 func (m *BeginRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BeginRequest.Unmarshal(m, b)
@@ -1105,7 +1171,7 @@ func (m *BeginReply) Reset()         { *m = BeginReply{} }
 func (m *BeginReply) String() string { return proto.CompactTextString(m) }
 func (*BeginReply) ProtoMessage()    {}
 func (*BeginReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{13}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{13}
 }
 func (m *BeginReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BeginReply.Unmarshal(m, b)
@@ -1151,7 +1217,7 @@ func (m *CommitRequest) Reset()         { *m = CommitRequest{} }
 func (m *CommitRequest) String() string { return proto.CompactTextString(m) }
 func (*CommitRequest) ProtoMessage()    {}
 func (*CommitRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{14}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{14}
 }
 func (m *CommitRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CommitRequest.Unmarshal(m, b)
@@ -1196,7 +1262,7 @@ func (m *CommitReply) Reset()         { *m = CommitReply{} }
 func (m *CommitReply) String() string { return proto.CompactTextString(m) }
 func (*CommitReply) ProtoMessage()    {}
 func (*CommitReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_15314e03bbe34c44, []int{15}
+	return fileDescriptor_keydbr_63570abf52dee662, []int{15}
 }
 func (m *CommitReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CommitReply.Unmarshal(m, b)
@@ -1223,6 +1289,82 @@ func (m *CommitReply) GetError() string {
 	return ""
 }
 
+type RollbackRequest struct {
+	Txid                 uint64   `protobuf:"varint,1,opt,name=txid,proto3" json:"txid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RollbackRequest) Reset()         { *m = RollbackRequest{} }
+func (m *RollbackRequest) String() string { return proto.CompactTextString(m) }
+func (*RollbackRequest) ProtoMessage()    {}
+func (*RollbackRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_63570abf52dee662, []int{16}
+}
+func (m *RollbackRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RollbackRequest.Unmarshal(m, b)
+}
+func (m *RollbackRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RollbackRequest.Marshal(b, m, deterministic)
+}
+func (dst *RollbackRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RollbackRequest.Merge(dst, src)
+}
+func (m *RollbackRequest) XXX_Size() int {
+	return xxx_messageInfo_RollbackRequest.Size(m)
+}
+func (m *RollbackRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RollbackRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RollbackRequest proto.InternalMessageInfo
+
+func (m *RollbackRequest) GetTxid() uint64 {
+	if m != nil {
+		return m.Txid
+	}
+	return 0
+}
+
+type RollbackReply struct {
+	Error                string   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RollbackReply) Reset()         { *m = RollbackReply{} }
+func (m *RollbackReply) String() string { return proto.CompactTextString(m) }
+func (*RollbackReply) ProtoMessage()    {}
+func (*RollbackReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_63570abf52dee662, []int{17}
+}
+func (m *RollbackReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RollbackReply.Unmarshal(m, b)
+}
+func (m *RollbackReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RollbackReply.Marshal(b, m, deterministic)
+}
+func (dst *RollbackReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RollbackReply.Merge(dst, src)
+}
+func (m *RollbackReply) XXX_Size() int {
+	return xxx_messageInfo_RollbackReply.Size(m)
+}
+func (m *RollbackReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_RollbackReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RollbackReply proto.InternalMessageInfo
+
+func (m *RollbackReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*InMessage)(nil), "remote.InMessage")
 	proto.RegisterType((*OutMessage)(nil), "remote.OutMessage")
@@ -1240,6 +1382,8 @@ func init() {
 	proto.RegisterType((*BeginReply)(nil), "remote.BeginReply")
 	proto.RegisterType((*CommitRequest)(nil), "remote.CommitRequest")
 	proto.RegisterType((*CommitReply)(nil), "remote.CommitReply")
+	proto.RegisterType((*RollbackRequest)(nil), "remote.RollbackRequest")
+	proto.RegisterType((*RollbackReply)(nil), "remote.RollbackReply")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1346,44 +1490,47 @@ var _Keydb_serviceDesc = grpc.ServiceDesc{
 	Metadata: "keydbr.proto",
 }
 
-func init() { proto.RegisterFile("keydbr.proto", fileDescriptor_keydbr_15314e03bbe34c44) }
+func init() { proto.RegisterFile("keydbr.proto", fileDescriptor_keydbr_63570abf52dee662) }
 
-var fileDescriptor_keydbr_15314e03bbe34c44 = []byte{
-	// 562 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xef, 0x6e, 0xd3, 0x30,
-	0x10, 0xc0, 0x97, 0xf5, 0xff, 0xb5, 0x43, 0x9d, 0x3b, 0x50, 0xc4, 0xa7, 0x61, 0x2a, 0x3a, 0x26,
-	0x56, 0x50, 0x91, 0x86, 0xf8, 0xc0, 0x97, 0x14, 0x89, 0xa1, 0x09, 0xad, 0xca, 0x1b, 0x24, 0xe9,
-	0xa9, 0x54, 0x6b, 0xe3, 0xe0, 0x3a, 0x13, 0x7d, 0x3b, 0xde, 0x80, 0x57, 0x42, 0xb6, 0x93, 0xd8,
-	0x8e, 0x5a, 0x89, 0x6f, 0xf1, 0xe9, 0x97, 0x3b, 0xdf, 0xcf, 0x67, 0xc3, 0xe0, 0x11, 0xf7, 0xcb,
-	0x98, 0x4f, 0x33, 0xce, 0x04, 0x23, 0x6d, 0x8e, 0x5b, 0x26, 0x90, 0xfe, 0x3d, 0x85, 0xde, 0xf7,
-	0xf4, 0x07, 0xee, 0x76, 0xd1, 0x0a, 0xc9, 0x5b, 0x68, 0xb2, 0x0c, 0x53, 0xdf, 0xbb, 0xf4, 0xae,
-	0xfa, 0xb3, 0xd1, 0x54, 0x43, 0xd3, 0x87, 0x0c, 0xd3, 0x10, 0x7f, 0xe5, 0xb8, 0x13, 0x77, 0x27,
-	0xa1, 0x42, 0xc8, 0x7b, 0x50, 0x29, 0x9e, 0xd0, 0x3f, 0x55, 0xf0, 0xf3, 0x12, 0x0e, 0x55, 0xd4,
-	0xe0, 0x05, 0x46, 0xde, 0x41, 0x2b, 0xd9, 0xb0, 0x1d, 0xfa, 0x0d, 0xc5, 0x5f, 0x94, 0xfc, 0x5c,
-	0x06, 0x0d, 0xae, 0x21, 0xf2, 0x06, 0x1a, 0x2b, 0x14, 0x7e, 0x53, 0xb1, 0xa4, 0x64, 0xbf, 0xa1,
-	0x30, 0xa4, 0x04, 0x24, 0x97, 0xe5, 0xc2, 0x6f, 0xb9, 0xdc, 0x22, 0xb7, 0xb9, 0x2c, 0x17, 0xb2,
-	0x7a, 0x8c, 0xab, 0x75, 0xea, 0xb7, 0xdd, 0xea, 0x81, 0x0c, 0x5a, 0xd5, 0x15, 0x24, 0x9b, 0x4b,
-	0xd8, 0x76, 0xbb, 0x16, 0x7e, 0xc7, 0x6d, 0x6e, 0xae, 0xa2, 0x56, 0x73, 0x1a, 0x0b, 0x7a, 0xd0,
-	0xe1, 0x3a, 0x48, 0xff, 0x9c, 0x02, 0x3c, 0xe4, 0xa2, 0x54, 0x3a, 0x71, 0x94, 0x9e, 0xbb, 0x4a,
-	0xb3, 0xcd, 0xbe, 0x12, 0x7a, 0x53, 0x13, 0x3a, 0xaa, 0x0b, 0xd5, 0x70, 0xa9, 0xf3, 0xda, 0xd5,
-	0x49, 0x6a, 0x3a, 0x35, 0x5c, 0xc8, 0x1c, 0xdb, 0x32, 0x87, 0x8e, 0x4c, 0xcd, 0x29, 0x95, 0x63,
-	0x5b, 0xe5, 0xd0, 0x51, 0x59, 0x50, 0x52, 0xe4, 0xb5, 0x2b, 0x92, 0xd4, 0x44, 0x16, 0x75, 0xb5,
-	0xc6, 0x9b, 0x9a, 0xc6, 0x51, 0x5d, 0x63, 0xd1, 0x52, 0x21, 0xb1, 0x03, 0x2d, 0x2e, 0x43, 0xf4,
-	0x0b, 0xf4, 0xad, 0x91, 0x23, 0x2f, 0xa0, 0xbd, 0x8c, 0xd3, 0x68, 0x8b, 0x4a, 0x62, 0x2f, 0x2c,
-	0x56, 0x32, 0x9e, 0x70, 0x8c, 0x84, 0x36, 0xd6, 0x0d, 0x8b, 0x15, 0x7d, 0x05, 0xbd, 0x4a, 0x2f,
-	0xb9, 0x80, 0x16, 0x72, 0xce, 0xb8, 0x62, 0x7a, 0xa1, 0x5e, 0xd0, 0x09, 0x9c, 0x39, 0x73, 0x7a,
-	0xac, 0x06, 0x7d, 0x0d, 0x7d, 0xcb, 0xbf, 0xc9, 0xe6, 0xd9, 0xd9, 0x9e, 0xc1, 0xc0, 0x9e, 0x62,
-	0x4a, 0x01, 0xcc, 0x31, 0x1c, 0xf9, 0x67, 0x06, 0x60, 0xa6, 0x99, 0x10, 0x68, 0x8a, 0xdf, 0xeb,
-	0xa5, 0x42, 0x9a, 0xa1, 0xfa, 0x26, 0x43, 0x68, 0x3c, 0xe2, 0x5e, 0xed, 0x7b, 0x10, 0xca, 0x4f,
-	0x7a, 0x0b, 0xdd, 0xf2, 0xd0, 0x64, 0xd6, 0xa7, 0x68, 0x93, 0xeb, 0xfd, 0x0e, 0x42, 0xbd, 0x38,
-	0xd2, 0xed, 0x1d, 0x80, 0xb9, 0x11, 0xff, 0x57, 0xcb, 0xe4, 0x6f, 0x58, 0xf9, 0xe9, 0x25, 0x74,
-	0xcb, 0x81, 0x38, 0xd2, 0xd7, 0x18, 0x06, 0xf6, 0x9d, 0x92, 0x94, 0x88, 0xe2, 0x0d, 0x96, 0x3b,
-	0x52, 0x0b, 0x7a, 0x0b, 0x60, 0x06, 0xe6, 0xe0, 0x8e, 0x0e, 0x77, 0xf2, 0x09, 0xce, 0x9c, 0x2b,
-	0x78, 0xf0, 0x57, 0x02, 0xcd, 0xdd, 0x3e, 0x4d, 0x8a, 0xa9, 0x50, 0xdf, 0xf2, 0x1c, 0xad, 0xa1,
-	0x3b, 0xbc, 0xf7, 0x59, 0x00, 0xad, 0x7b, 0xf9, 0x48, 0x92, 0xcf, 0x00, 0x73, 0x96, 0xa6, 0x98,
-	0x88, 0x35, 0x4b, 0x49, 0x75, 0x69, 0xab, 0x87, 0xf2, 0x65, 0x35, 0xf6, 0xe6, 0xa6, 0xd3, 0x93,
-	0x2b, 0xef, 0x83, 0x17, 0x4c, 0xe0, 0x3c, 0x61, 0xdb, 0x29, 0x67, 0x71, 0xf4, 0x93, 0x4d, 0xf5,
-	0x9b, 0x1b, 0x0c, 0xef, 0x71, 0xff, 0x35, 0x08, 0xd5, 0x2f, 0x0b, 0xf9, 0xfe, 0x2e, 0xbc, 0xb8,
-	0xad, 0x1e, 0xe2, 0x8f, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x4e, 0xd4, 0x74, 0x86, 0x98, 0x05,
-	0x00, 0x00,
+var fileDescriptor_keydbr_63570abf52dee662 = []byte{
+	// 614 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x95, 0x5f, 0x6f, 0xd3, 0x3c,
+	0x14, 0xc6, 0x97, 0xf5, 0xff, 0x69, 0xfb, 0xbe, 0x9d, 0xbb, 0x41, 0xc4, 0xd5, 0x30, 0x1d, 0x1d,
+	0x13, 0x2b, 0xa8, 0x13, 0x43, 0x5c, 0x70, 0x93, 0x22, 0x31, 0x34, 0xa1, 0x55, 0xf9, 0x06, 0x49,
+	0x6a, 0x95, 0xaa, 0x69, 0x1c, 0x5c, 0x67, 0xa2, 0x5f, 0x80, 0x6f, 0xcc, 0x3d, 0xb2, 0x9d, 0xc4,
+	0x76, 0xd6, 0x4a, 0xdc, 0xc5, 0x47, 0x3f, 0x1f, 0xfb, 0x3c, 0xcf, 0x39, 0x0e, 0xf4, 0xd6, 0x64,
+	0xb7, 0x08, 0xd9, 0x24, 0x65, 0x94, 0x53, 0xd4, 0x64, 0x64, 0x43, 0x39, 0xc1, 0xbf, 0x6b, 0xd0,
+	0xf9, 0x96, 0x7c, 0x27, 0xdb, 0x6d, 0xb0, 0x24, 0xe8, 0x0d, 0xd4, 0x69, 0x4a, 0x12, 0xd7, 0x39,
+	0x77, 0x2e, 0xbb, 0xd3, 0xe1, 0x44, 0x41, 0x93, 0x87, 0x94, 0x24, 0x3e, 0xf9, 0x99, 0x91, 0x2d,
+	0xbf, 0x3b, 0xf2, 0x25, 0x82, 0xde, 0x81, 0x4c, 0xf1, 0x48, 0xdc, 0x63, 0x09, 0x9f, 0x15, 0xb0,
+	0x2f, 0xa3, 0x1a, 0xcf, 0x31, 0xf4, 0x16, 0x1a, 0x51, 0x4c, 0xb7, 0xc4, 0xad, 0x49, 0xfe, 0xb4,
+	0xe0, 0x67, 0x22, 0xa8, 0x71, 0x05, 0xa1, 0xd7, 0x50, 0x5b, 0x12, 0xee, 0xd6, 0x25, 0x8b, 0x0a,
+	0xf6, 0x2b, 0xe1, 0x9a, 0x14, 0x80, 0xe0, 0xd2, 0x8c, 0xbb, 0x0d, 0x9b, 0x9b, 0x67, 0x26, 0x97,
+	0x66, 0x5c, 0x9c, 0x1e, 0x92, 0xe5, 0x2a, 0x71, 0x9b, 0xf6, 0xe9, 0x9e, 0x08, 0x1a, 0xa7, 0x4b,
+	0x48, 0x14, 0x17, 0xd1, 0xcd, 0x66, 0xc5, 0xdd, 0x96, 0x5d, 0xdc, 0x4c, 0x46, 0x8d, 0xe2, 0x14,
+	0x86, 0x3e, 0x40, 0x9b, 0xd1, 0x38, 0x0e, 0x83, 0x68, 0xed, 0xb6, 0xe5, 0x96, 0xe7, 0xa5, 0x1e,
+	0x79, 0x5c, 0x6f, 0x2a, 0x51, 0xaf, 0x03, 0x2d, 0xa6, 0xc2, 0xf8, 0xcf, 0x31, 0xc0, 0x43, 0xc6,
+	0x0b, 0x27, 0xc6, 0x96, 0x13, 0x27, 0xb6, 0x13, 0x69, 0xbc, 0x2b, 0x7d, 0xb8, 0xae, 0xf8, 0x30,
+	0xac, 0xfa, 0xa0, 0xe0, 0xc2, 0x85, 0x2b, 0xdb, 0x05, 0x54, 0x71, 0x41, 0xc1, 0xb9, 0x07, 0x23,
+	0xd3, 0x83, 0x81, 0xe5, 0x81, 0xe2, 0xa4, 0x03, 0x23, 0xd3, 0x81, 0x81, 0xe5, 0x40, 0x4e, 0x09,
+	0xfd, 0xaf, 0x6c, 0xfd, 0x51, 0x45, 0xff, 0xfc, 0x5c, 0xa5, 0xfe, 0x75, 0x45, 0xfd, 0x61, 0x55,
+	0xfd, 0xbc, 0xa4, 0x5c, 0xfb, 0x9b, 0x27, 0xda, 0x9f, 0x3d, 0xd5, 0x5e, 0x6d, 0xd1, 0xca, 0xb7,
+	0xa0, 0xc1, 0x44, 0x10, 0x7f, 0x86, 0xae, 0xd1, 0xde, 0xe8, 0x19, 0x34, 0x17, 0x61, 0x12, 0x6c,
+	0x88, 0x54, 0xbe, 0xe3, 0xe7, 0x2b, 0x11, 0x8f, 0x18, 0x09, 0xb8, 0x92, 0xb9, 0xed, 0xe7, 0x2b,
+	0xfc, 0x12, 0x3a, 0xa5, 0x27, 0xe8, 0x14, 0x1a, 0x84, 0x31, 0xca, 0x24, 0xd3, 0xf1, 0xd5, 0x02,
+	0x8f, 0xa1, 0x6f, 0xcd, 0xc4, 0xa1, 0x33, 0xf0, 0x2b, 0xe8, 0x1a, 0xa6, 0xe9, 0x6c, 0x8e, 0x99,
+	0xed, 0x3f, 0xe8, 0x99, 0x13, 0x83, 0x31, 0x80, 0xf6, 0xee, 0xc0, 0x9e, 0x29, 0x80, 0x9e, 0x1c,
+	0x84, 0xa0, 0xce, 0x7f, 0xad, 0x16, 0x12, 0xa9, 0xfb, 0xf2, 0x1b, 0x0d, 0xa0, 0xb6, 0x26, 0x3b,
+	0x79, 0xef, 0x9e, 0x2f, 0x3e, 0xf1, 0x2d, 0xb4, 0x0b, 0xa7, 0x45, 0xd6, 0xc7, 0x20, 0xce, 0xd4,
+	0x7d, 0x7b, 0xbe, 0x5a, 0x1c, 0xa8, 0xf6, 0x0e, 0x40, 0x4f, 0xdf, 0xbf, 0x9d, 0xa5, 0xf3, 0xd7,
+	0x8c, 0xfc, 0xf8, 0x1c, 0xda, 0x45, 0x17, 0x1d, 0xa8, 0x6b, 0x04, 0x3d, 0x73, 0x7e, 0x05, 0xc5,
+	0x83, 0x30, 0x26, 0xc5, 0x8d, 0xe4, 0x02, 0xdf, 0x02, 0xe8, 0x2e, 0xdb, 0x7b, 0xa3, 0xfd, 0x95,
+	0x7c, 0x84, 0xbe, 0x35, 0xee, 0x7b, 0xb7, 0x22, 0xa8, 0x6f, 0x77, 0x49, 0x94, 0x77, 0x85, 0xfc,
+	0x16, 0x3e, 0x1a, 0x9d, 0x7a, 0xe0, 0xee, 0x17, 0xf0, 0x7f, 0xe5, 0x65, 0xd8, 0x97, 0x1f, 0x5f,
+	0x40, 0xdf, 0x6a, 0xe2, 0xfd, 0xd9, 0xa6, 0x1e, 0x34, 0xee, 0xc5, 0xf3, 0x8e, 0x3e, 0x01, 0xcc,
+	0x68, 0x92, 0x90, 0x88, 0xaf, 0x68, 0x82, 0xca, 0x77, 0xa3, 0x7c, 0xe2, 0x5f, 0x94, 0x93, 0xa7,
+	0x1f, 0x1b, 0x7c, 0x74, 0xe9, 0xbc, 0x77, 0xbc, 0x31, 0x9c, 0x44, 0x74, 0x33, 0x61, 0x34, 0x0c,
+	0x7e, 0xd0, 0x89, 0xfa, 0x5b, 0x78, 0x83, 0x7b, 0xb2, 0xfb, 0xe2, 0xf9, 0x72, 0xcb, 0x5c, 0xfc,
+	0x39, 0xe6, 0x4e, 0xd8, 0x94, 0xbf, 0x90, 0x9b, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x40, 0x93,
+	0x97, 0x81, 0x52, 0x06, 0x00, 0x00,
 }

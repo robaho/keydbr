@@ -64,8 +64,6 @@ func Open(addr string, dbname string, createIfNeeded bool, timeout int) (*Remote
 
 func (db *RemoteDatabase) Close() error {
 
-	defer db.stream.CloseSend()
-
 	request := &pb.InMessage_Close{Close: &pb.CloseRequest{}}
 
 	err := db.stream.Send(&pb.InMessage{Request: request})
@@ -83,6 +81,8 @@ func (db *RemoteDatabase) Close() error {
 	if response.Error != "" {
 		return errors.New(response.Error)
 	}
+
+	db.stream.CloseSend()
 
 	return nil
 }
@@ -186,4 +186,26 @@ func (tx *RemoteTransaction) Commit() error {
 
 func (tx *RemoteTransaction) CommitSync() error {
 	return tx.commitOption(true)
+}
+
+func (tx *RemoteTransaction) Rollback() error {
+	request := &pb.InMessage_Rollback{Rollback: &pb.RollbackRequest{Txid: tx.txid}}
+
+	err := tx.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return err
+	}
+
+	msg, err := tx.db.stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Rollback).Rollback
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+
+	return nil
 }

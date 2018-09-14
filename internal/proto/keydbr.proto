@@ -33,6 +33,7 @@ message InMessage {
         PutRequest put = 5;
         BeginRequest begin = 6;
         CommitRequest commit = 7;
+        RollbackRequest rollback = 8;
     }
 }
 
@@ -45,6 +46,7 @@ message OutMessage {
         PutReply put = 5;
         BeginReply begin = 6;
         CommitReply commit = 7;
+        RollbackReply rollback = 8;
     }
 }
 
@@ -109,3 +111,12 @@ message CommitRequest {
 message CommitReply {
     string error = 1;
 }
+
+message RollbackRequest {
+    uint64 txid = 1;
+}
+
+message RollbackReply {
+    string error = 1;
+}
+
