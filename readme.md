@@ -14,3 +14,7 @@ by the server.
 go run cmd/server
 
 There is a sample command line client in cmd/client which uses the client API.
+
+**TODOs**
+
+Need to implement remote iteration
