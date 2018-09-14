@@ -34,6 +34,8 @@ message InMessage {
         BeginRequest begin = 6;
         CommitRequest commit = 7;
         RollbackRequest rollback = 8;
+        LookupRequest lookup = 9;
+        LookupNextRequest next = 10;
     }
 }
 
@@ -47,6 +49,8 @@ message OutMessage {
         BeginReply begin = 6;
         CommitReply commit = 7;
         RollbackReply rollback = 8;
+        LookupReply lookup = 9;
+        LookupNextReply next = 10;
     }
 }
 
@@ -119,4 +123,29 @@ message RollbackRequest {
 message RollbackReply {
     string error = 1;
 }
+
+message LookupRequest {
+    bytes lower = 1;
+    bytes upper = 2;
+}
+
+message LookupReply {
+    uint64 id = 1;
+    string error = 2;
+}
+
+message LookupNextRequest {
+    uint64 id = 1;
+}
+
+message KeyValue {
+    bytes key = 1;
+    bytes value = 2;
+}
+
+message LookupNextReply {
+    repeated KeyValue entries = 1;
+    bool eof = 2;
+}
+
 

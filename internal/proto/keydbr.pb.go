@@ -33,6 +33,8 @@ type InMessage struct {
 	//	*InMessage_Begin
 	//	*InMessage_Commit
 	//	*InMessage_Rollback
+	//	*InMessage_Lookup
+	//	*InMessage_Next
 	Request              isInMessage_Request `protobuf_oneof:"request"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
@@ -43,7 +45,7 @@ func (m *InMessage) Reset()         { *m = InMessage{} }
 func (m *InMessage) String() string { return proto.CompactTextString(m) }
 func (*InMessage) ProtoMessage()    {}
 func (*InMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{0}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{0}
 }
 func (m *InMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_InMessage.Unmarshal(m, b)
@@ -99,6 +101,14 @@ type InMessage_Rollback struct {
 	Rollback *RollbackRequest `protobuf:"bytes,8,opt,name=rollback,proto3,oneof"`
 }
 
+type InMessage_Lookup struct {
+	Lookup *LookupRequest `protobuf:"bytes,9,opt,name=lookup,proto3,oneof"`
+}
+
+type InMessage_Next struct {
+	Next *LookupNextRequest `protobuf:"bytes,10,opt,name=next,proto3,oneof"`
+}
+
 func (*InMessage_Open) isInMessage_Request() {}
 
 func (*InMessage_Remove) isInMessage_Request() {}
@@ -114,6 +124,10 @@ func (*InMessage_Begin) isInMessage_Request() {}
 func (*InMessage_Commit) isInMessage_Request() {}
 
 func (*InMessage_Rollback) isInMessage_Request() {}
+
+func (*InMessage_Lookup) isInMessage_Request() {}
+
+func (*InMessage_Next) isInMessage_Request() {}
 
 func (m *InMessage) GetRequest() isInMessage_Request {
 	if m != nil {
@@ -178,6 +192,20 @@ func (m *InMessage) GetRollback() *RollbackRequest {
 	return nil
 }
 
+func (m *InMessage) GetLookup() *LookupRequest {
+	if x, ok := m.GetRequest().(*InMessage_Lookup); ok {
+		return x.Lookup
+	}
+	return nil
+}
+
+func (m *InMessage) GetNext() *LookupNextRequest {
+	if x, ok := m.GetRequest().(*InMessage_Next); ok {
+		return x.Next
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*InMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _InMessage_OneofMarshaler, _InMessage_OneofUnmarshaler, _InMessage_OneofSizer, []interface{}{
@@ -189,6 +217,8 @@ func (*InMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) err
 		(*InMessage_Begin)(nil),
 		(*InMessage_Commit)(nil),
 		(*InMessage_Rollback)(nil),
+		(*InMessage_Lookup)(nil),
+		(*InMessage_Next)(nil),
 	}
 }
 
@@ -234,6 +264,16 @@ func _InMessage_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *InMessage_Rollback:
 		b.EncodeVarint(8<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.Rollback); err != nil {
+			return err
+		}
+	case *InMessage_Lookup:
+		b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Lookup); err != nil {
+			return err
+		}
+	case *InMessage_Next:
+		b.EncodeVarint(10<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Next); err != nil {
 			return err
 		}
 	case nil:
@@ -310,6 +350,22 @@ func _InMessage_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buff
 		err := b.DecodeMessage(msg)
 		m.Request = &InMessage_Rollback{msg}
 		return true, err
+	case 9: // request.lookup
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(LookupRequest)
+		err := b.DecodeMessage(msg)
+		m.Request = &InMessage_Lookup{msg}
+		return true, err
+	case 10: // request.next
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(LookupNextRequest)
+		err := b.DecodeMessage(msg)
+		m.Request = &InMessage_Next{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -359,6 +415,16 @@ func _InMessage_OneofSizer(msg proto.Message) (n int) {
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *InMessage_Lookup:
+		s := proto.Size(x.Lookup)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *InMessage_Next:
+		s := proto.Size(x.Next)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
@@ -376,6 +442,8 @@ type OutMessage struct {
 	//	*OutMessage_Begin
 	//	*OutMessage_Commit
 	//	*OutMessage_Rollback
+	//	*OutMessage_Lookup
+	//	*OutMessage_Next
 	Reply                isOutMessage_Reply `protobuf_oneof:"reply"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
@@ -386,7 +454,7 @@ func (m *OutMessage) Reset()         { *m = OutMessage{} }
 func (m *OutMessage) String() string { return proto.CompactTextString(m) }
 func (*OutMessage) ProtoMessage()    {}
 func (*OutMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{1}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{1}
 }
 func (m *OutMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OutMessage.Unmarshal(m, b)
@@ -442,6 +510,14 @@ type OutMessage_Rollback struct {
 	Rollback *RollbackReply `protobuf:"bytes,8,opt,name=rollback,proto3,oneof"`
 }
 
+type OutMessage_Lookup struct {
+	Lookup *LookupReply `protobuf:"bytes,9,opt,name=lookup,proto3,oneof"`
+}
+
+type OutMessage_Next struct {
+	Next *LookupNextReply `protobuf:"bytes,10,opt,name=next,proto3,oneof"`
+}
+
 func (*OutMessage_Open) isOutMessage_Reply() {}
 
 func (*OutMessage_Remove) isOutMessage_Reply() {}
@@ -457,6 +533,10 @@ func (*OutMessage_Begin) isOutMessage_Reply() {}
 func (*OutMessage_Commit) isOutMessage_Reply() {}
 
 func (*OutMessage_Rollback) isOutMessage_Reply() {}
+
+func (*OutMessage_Lookup) isOutMessage_Reply() {}
+
+func (*OutMessage_Next) isOutMessage_Reply() {}
 
 func (m *OutMessage) GetReply() isOutMessage_Reply {
 	if m != nil {
@@ -521,6 +601,20 @@ func (m *OutMessage) GetRollback() *RollbackReply {
 	return nil
 }
 
+func (m *OutMessage) GetLookup() *LookupReply {
+	if x, ok := m.GetReply().(*OutMessage_Lookup); ok {
+		return x.Lookup
+	}
+	return nil
+}
+
+func (m *OutMessage) GetNext() *LookupNextReply {
+	if x, ok := m.GetReply().(*OutMessage_Next); ok {
+		return x.Next
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*OutMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _OutMessage_OneofMarshaler, _OutMessage_OneofUnmarshaler, _OutMessage_OneofSizer, []interface{}{
@@ -532,6 +626,8 @@ func (*OutMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) er
 		(*OutMessage_Begin)(nil),
 		(*OutMessage_Commit)(nil),
 		(*OutMessage_Rollback)(nil),
+		(*OutMessage_Lookup)(nil),
+		(*OutMessage_Next)(nil),
 	}
 }
 
@@ -577,6 +673,16 @@ func _OutMessage_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *OutMessage_Rollback:
 		b.EncodeVarint(8<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.Rollback); err != nil {
+			return err
+		}
+	case *OutMessage_Lookup:
+		b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Lookup); err != nil {
+			return err
+		}
+	case *OutMessage_Next:
+		b.EncodeVarint(10<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Next); err != nil {
 			return err
 		}
 	case nil:
@@ -653,6 +759,22 @@ func _OutMessage_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buf
 		err := b.DecodeMessage(msg)
 		m.Reply = &OutMessage_Rollback{msg}
 		return true, err
+	case 9: // reply.lookup
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(LookupReply)
+		err := b.DecodeMessage(msg)
+		m.Reply = &OutMessage_Lookup{msg}
+		return true, err
+	case 10: // reply.next
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(LookupNextReply)
+		err := b.DecodeMessage(msg)
+		m.Reply = &OutMessage_Next{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -702,6 +824,16 @@ func _OutMessage_OneofSizer(msg proto.Message) (n int) {
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *OutMessage_Lookup:
+		s := proto.Size(x.Lookup)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *OutMessage_Next:
+		s := proto.Size(x.Next)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
@@ -721,7 +853,7 @@ func (m *OpenRequest) Reset()         { *m = OpenRequest{} }
 func (m *OpenRequest) String() string { return proto.CompactTextString(m) }
 func (*OpenRequest) ProtoMessage()    {}
 func (*OpenRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{2}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{2}
 }
 func (m *OpenRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OpenRequest.Unmarshal(m, b)
@@ -766,7 +898,7 @@ func (m *OpenReply) Reset()         { *m = OpenReply{} }
 func (m *OpenReply) String() string { return proto.CompactTextString(m) }
 func (*OpenReply) ProtoMessage()    {}
 func (*OpenReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{3}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{3}
 }
 func (m *OpenReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_OpenReply.Unmarshal(m, b)
@@ -804,7 +936,7 @@ func (m *RemoveRequest) Reset()         { *m = RemoveRequest{} }
 func (m *RemoveRequest) String() string { return proto.CompactTextString(m) }
 func (*RemoveRequest) ProtoMessage()    {}
 func (*RemoveRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{4}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{4}
 }
 func (m *RemoveRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveRequest.Unmarshal(m, b)
@@ -842,7 +974,7 @@ func (m *RemoveReply) Reset()         { *m = RemoveReply{} }
 func (m *RemoveReply) String() string { return proto.CompactTextString(m) }
 func (*RemoveReply) ProtoMessage()    {}
 func (*RemoveReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{5}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{5}
 }
 func (m *RemoveReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveReply.Unmarshal(m, b)
@@ -879,7 +1011,7 @@ func (m *CloseRequest) Reset()         { *m = CloseRequest{} }
 func (m *CloseRequest) String() string { return proto.CompactTextString(m) }
 func (*CloseRequest) ProtoMessage()    {}
 func (*CloseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{6}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{6}
 }
 func (m *CloseRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloseRequest.Unmarshal(m, b)
@@ -910,7 +1042,7 @@ func (m *CloseReply) Reset()         { *m = CloseReply{} }
 func (m *CloseReply) String() string { return proto.CompactTextString(m) }
 func (*CloseReply) ProtoMessage()    {}
 func (*CloseReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{7}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{7}
 }
 func (m *CloseReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloseReply.Unmarshal(m, b)
@@ -949,7 +1081,7 @@ func (m *GetRequest) Reset()         { *m = GetRequest{} }
 func (m *GetRequest) String() string { return proto.CompactTextString(m) }
 func (*GetRequest) ProtoMessage()    {}
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{8}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{8}
 }
 func (m *GetRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetRequest.Unmarshal(m, b)
@@ -995,7 +1127,7 @@ func (m *GetReply) Reset()         { *m = GetReply{} }
 func (m *GetReply) String() string { return proto.CompactTextString(m) }
 func (*GetReply) ProtoMessage()    {}
 func (*GetReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{9}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{9}
 }
 func (m *GetReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetReply.Unmarshal(m, b)
@@ -1042,7 +1174,7 @@ func (m *PutRequest) Reset()         { *m = PutRequest{} }
 func (m *PutRequest) String() string { return proto.CompactTextString(m) }
 func (*PutRequest) ProtoMessage()    {}
 func (*PutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{10}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{10}
 }
 func (m *PutRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PutRequest.Unmarshal(m, b)
@@ -1094,7 +1226,7 @@ func (m *PutReply) Reset()         { *m = PutReply{} }
 func (m *PutReply) String() string { return proto.CompactTextString(m) }
 func (*PutReply) ProtoMessage()    {}
 func (*PutReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{11}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{11}
 }
 func (m *PutReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PutReply.Unmarshal(m, b)
@@ -1132,7 +1264,7 @@ func (m *BeginRequest) Reset()         { *m = BeginRequest{} }
 func (m *BeginRequest) String() string { return proto.CompactTextString(m) }
 func (*BeginRequest) ProtoMessage()    {}
 func (*BeginRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{12}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{12}
 }
 func (m *BeginRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BeginRequest.Unmarshal(m, b)
@@ -1171,7 +1303,7 @@ func (m *BeginReply) Reset()         { *m = BeginReply{} }
 func (m *BeginReply) String() string { return proto.CompactTextString(m) }
 func (*BeginReply) ProtoMessage()    {}
 func (*BeginReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{13}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{13}
 }
 func (m *BeginReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BeginReply.Unmarshal(m, b)
@@ -1217,7 +1349,7 @@ func (m *CommitRequest) Reset()         { *m = CommitRequest{} }
 func (m *CommitRequest) String() string { return proto.CompactTextString(m) }
 func (*CommitRequest) ProtoMessage()    {}
 func (*CommitRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{14}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{14}
 }
 func (m *CommitRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CommitRequest.Unmarshal(m, b)
@@ -1262,7 +1394,7 @@ func (m *CommitReply) Reset()         { *m = CommitReply{} }
 func (m *CommitReply) String() string { return proto.CompactTextString(m) }
 func (*CommitReply) ProtoMessage()    {}
 func (*CommitReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{15}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{15}
 }
 func (m *CommitReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CommitReply.Unmarshal(m, b)
@@ -1300,7 +1432,7 @@ func (m *RollbackRequest) Reset()         { *m = RollbackRequest{} }
 func (m *RollbackRequest) String() string { return proto.CompactTextString(m) }
 func (*RollbackRequest) ProtoMessage()    {}
 func (*RollbackRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{16}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{16}
 }
 func (m *RollbackRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RollbackRequest.Unmarshal(m, b)
@@ -1338,7 +1470,7 @@ func (m *RollbackReply) Reset()         { *m = RollbackReply{} }
 func (m *RollbackReply) String() string { return proto.CompactTextString(m) }
 func (*RollbackReply) ProtoMessage()    {}
 func (*RollbackReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_keydbr_63570abf52dee662, []int{17}
+	return fileDescriptor_keydbr_074d29b91536a168, []int{17}
 }
 func (m *RollbackReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RollbackReply.Unmarshal(m, b)
@@ -1365,6 +1497,228 @@ func (m *RollbackReply) GetError() string {
 	return ""
 }
 
+type LookupRequest struct {
+	Lower                []byte   `protobuf:"bytes,1,opt,name=lower,proto3" json:"lower,omitempty"`
+	Upper                []byte   `protobuf:"bytes,2,opt,name=upper,proto3" json:"upper,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LookupRequest) Reset()         { *m = LookupRequest{} }
+func (m *LookupRequest) String() string { return proto.CompactTextString(m) }
+func (*LookupRequest) ProtoMessage()    {}
+func (*LookupRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_074d29b91536a168, []int{18}
+}
+func (m *LookupRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LookupRequest.Unmarshal(m, b)
+}
+func (m *LookupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LookupRequest.Marshal(b, m, deterministic)
+}
+func (dst *LookupRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LookupRequest.Merge(dst, src)
+}
+func (m *LookupRequest) XXX_Size() int {
+	return xxx_messageInfo_LookupRequest.Size(m)
+}
+func (m *LookupRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LookupRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LookupRequest proto.InternalMessageInfo
+
+func (m *LookupRequest) GetLower() []byte {
+	if m != nil {
+		return m.Lower
+	}
+	return nil
+}
+
+func (m *LookupRequest) GetUpper() []byte {
+	if m != nil {
+		return m.Upper
+	}
+	return nil
+}
+
+type LookupReply struct {
+	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Error                string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LookupReply) Reset()         { *m = LookupReply{} }
+func (m *LookupReply) String() string { return proto.CompactTextString(m) }
+func (*LookupReply) ProtoMessage()    {}
+func (*LookupReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_074d29b91536a168, []int{19}
+}
+func (m *LookupReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LookupReply.Unmarshal(m, b)
+}
+func (m *LookupReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LookupReply.Marshal(b, m, deterministic)
+}
+func (dst *LookupReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LookupReply.Merge(dst, src)
+}
+func (m *LookupReply) XXX_Size() int {
+	return xxx_messageInfo_LookupReply.Size(m)
+}
+func (m *LookupReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_LookupReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LookupReply proto.InternalMessageInfo
+
+func (m *LookupReply) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *LookupReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type LookupNextRequest struct {
+	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LookupNextRequest) Reset()         { *m = LookupNextRequest{} }
+func (m *LookupNextRequest) String() string { return proto.CompactTextString(m) }
+func (*LookupNextRequest) ProtoMessage()    {}
+func (*LookupNextRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_074d29b91536a168, []int{20}
+}
+func (m *LookupNextRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LookupNextRequest.Unmarshal(m, b)
+}
+func (m *LookupNextRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LookupNextRequest.Marshal(b, m, deterministic)
+}
+func (dst *LookupNextRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LookupNextRequest.Merge(dst, src)
+}
+func (m *LookupNextRequest) XXX_Size() int {
+	return xxx_messageInfo_LookupNextRequest.Size(m)
+}
+func (m *LookupNextRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LookupNextRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LookupNextRequest proto.InternalMessageInfo
+
+func (m *LookupNextRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type KeyValue struct {
+	Key                  []byte   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value                []byte   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *KeyValue) Reset()         { *m = KeyValue{} }
+func (m *KeyValue) String() string { return proto.CompactTextString(m) }
+func (*KeyValue) ProtoMessage()    {}
+func (*KeyValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_074d29b91536a168, []int{21}
+}
+func (m *KeyValue) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
+}
+func (m *KeyValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_KeyValue.Marshal(b, m, deterministic)
+}
+func (dst *KeyValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyValue.Merge(dst, src)
+}
+func (m *KeyValue) XXX_Size() int {
+	return xxx_messageInfo_KeyValue.Size(m)
+}
+func (m *KeyValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_KeyValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KeyValue proto.InternalMessageInfo
+
+func (m *KeyValue) GetKey() []byte {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *KeyValue) GetValue() []byte {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+type LookupNextReply struct {
+	Entries              []*KeyValue `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	Eof                  bool        `protobuf:"varint,2,opt,name=eof,proto3" json:"eof,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
+}
+
+func (m *LookupNextReply) Reset()         { *m = LookupNextReply{} }
+func (m *LookupNextReply) String() string { return proto.CompactTextString(m) }
+func (*LookupNextReply) ProtoMessage()    {}
+func (*LookupNextReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_keydbr_074d29b91536a168, []int{22}
+}
+func (m *LookupNextReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LookupNextReply.Unmarshal(m, b)
+}
+func (m *LookupNextReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LookupNextReply.Marshal(b, m, deterministic)
+}
+func (dst *LookupNextReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LookupNextReply.Merge(dst, src)
+}
+func (m *LookupNextReply) XXX_Size() int {
+	return xxx_messageInfo_LookupNextReply.Size(m)
+}
+func (m *LookupNextReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_LookupNextReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LookupNextReply proto.InternalMessageInfo
+
+func (m *LookupNextReply) GetEntries() []*KeyValue {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
+}
+
+func (m *LookupNextReply) GetEof() bool {
+	if m != nil {
+		return m.Eof
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*InMessage)(nil), "remote.InMessage")
 	proto.RegisterType((*OutMessage)(nil), "remote.OutMessage")
@@ -1384,6 +1738,11 @@ func init() {
 	proto.RegisterType((*CommitReply)(nil), "remote.CommitReply")
 	proto.RegisterType((*RollbackRequest)(nil), "remote.RollbackRequest")
 	proto.RegisterType((*RollbackReply)(nil), "remote.RollbackReply")
+	proto.RegisterType((*LookupRequest)(nil), "remote.LookupRequest")
+	proto.RegisterType((*LookupReply)(nil), "remote.LookupReply")
+	proto.RegisterType((*LookupNextRequest)(nil), "remote.LookupNextRequest")
+	proto.RegisterType((*KeyValue)(nil), "remote.KeyValue")
+	proto.RegisterType((*LookupNextReply)(nil), "remote.LookupNextReply")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1490,47 +1849,56 @@ var _Keydb_serviceDesc = grpc.ServiceDesc{
 	Metadata: "keydbr.proto",
 }
 
-func init() { proto.RegisterFile("keydbr.proto", fileDescriptor_keydbr_63570abf52dee662) }
+func init() { proto.RegisterFile("keydbr.proto", fileDescriptor_keydbr_074d29b91536a168) }
 
-var fileDescriptor_keydbr_63570abf52dee662 = []byte{
-	// 614 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x95, 0x5f, 0x6f, 0xd3, 0x3c,
-	0x14, 0xc6, 0x97, 0xf5, 0xff, 0x69, 0xfb, 0xbe, 0x9d, 0xbb, 0x41, 0xc4, 0xd5, 0x30, 0x1d, 0x1d,
-	0x13, 0x2b, 0xa8, 0x13, 0x43, 0x5c, 0x70, 0x93, 0x22, 0x31, 0x34, 0xa1, 0x55, 0xf9, 0x06, 0x49,
-	0x6a, 0x95, 0xaa, 0x69, 0x1c, 0x5c, 0x67, 0xa2, 0x5f, 0x80, 0x6f, 0xcc, 0x3d, 0xb2, 0x9d, 0xc4,
-	0x76, 0xd6, 0x4a, 0xdc, 0xc5, 0x47, 0x3f, 0x1f, 0xfb, 0x3c, 0xcf, 0x39, 0x0e, 0xf4, 0xd6, 0x64,
-	0xb7, 0x08, 0xd9, 0x24, 0x65, 0x94, 0x53, 0xd4, 0x64, 0x64, 0x43, 0x39, 0xc1, 0xbf, 0x6b, 0xd0,
-	0xf9, 0x96, 0x7c, 0x27, 0xdb, 0x6d, 0xb0, 0x24, 0xe8, 0x0d, 0xd4, 0x69, 0x4a, 0x12, 0xd7, 0x39,
-	0x77, 0x2e, 0xbb, 0xd3, 0xe1, 0x44, 0x41, 0x93, 0x87, 0x94, 0x24, 0x3e, 0xf9, 0x99, 0x91, 0x2d,
-	0xbf, 0x3b, 0xf2, 0x25, 0x82, 0xde, 0x81, 0x4c, 0xf1, 0x48, 0xdc, 0x63, 0x09, 0x9f, 0x15, 0xb0,
-	0x2f, 0xa3, 0x1a, 0xcf, 0x31, 0xf4, 0x16, 0x1a, 0x51, 0x4c, 0xb7, 0xc4, 0xad, 0x49, 0xfe, 0xb4,
-	0xe0, 0x67, 0x22, 0xa8, 0x71, 0x05, 0xa1, 0xd7, 0x50, 0x5b, 0x12, 0xee, 0xd6, 0x25, 0x8b, 0x0a,
-	0xf6, 0x2b, 0xe1, 0x9a, 0x14, 0x80, 0xe0, 0xd2, 0x8c, 0xbb, 0x0d, 0x9b, 0x9b, 0x67, 0x26, 0x97,
-	0x66, 0x5c, 0x9c, 0x1e, 0x92, 0xe5, 0x2a, 0x71, 0x9b, 0xf6, 0xe9, 0x9e, 0x08, 0x1a, 0xa7, 0x4b,
-	0x48, 0x14, 0x17, 0xd1, 0xcd, 0x66, 0xc5, 0xdd, 0x96, 0x5d, 0xdc, 0x4c, 0x46, 0x8d, 0xe2, 0x14,
-	0x86, 0x3e, 0x40, 0x9b, 0xd1, 0x38, 0x0e, 0x83, 0x68, 0xed, 0xb6, 0xe5, 0x96, 0xe7, 0xa5, 0x1e,
-	0x79, 0x5c, 0x6f, 0x2a, 0x51, 0xaf, 0x03, 0x2d, 0xa6, 0xc2, 0xf8, 0xcf, 0x31, 0xc0, 0x43, 0xc6,
-	0x0b, 0x27, 0xc6, 0x96, 0x13, 0x27, 0xb6, 0x13, 0x69, 0xbc, 0x2b, 0x7d, 0xb8, 0xae, 0xf8, 0x30,
-	0xac, 0xfa, 0xa0, 0xe0, 0xc2, 0x85, 0x2b, 0xdb, 0x05, 0x54, 0x71, 0x41, 0xc1, 0xb9, 0x07, 0x23,
-	0xd3, 0x83, 0x81, 0xe5, 0x81, 0xe2, 0xa4, 0x03, 0x23, 0xd3, 0x81, 0x81, 0xe5, 0x40, 0x4e, 0x09,
-	0xfd, 0xaf, 0x6c, 0xfd, 0x51, 0x45, 0xff, 0xfc, 0x5c, 0xa5, 0xfe, 0x75, 0x45, 0xfd, 0x61, 0x55,
-	0xfd, 0xbc, 0xa4, 0x5c, 0xfb, 0x9b, 0x27, 0xda, 0x9f, 0x3d, 0xd5, 0x5e, 0x6d, 0xd1, 0xca, 0xb7,
-	0xa0, 0xc1, 0x44, 0x10, 0x7f, 0x86, 0xae, 0xd1, 0xde, 0xe8, 0x19, 0x34, 0x17, 0x61, 0x12, 0x6c,
-	0x88, 0x54, 0xbe, 0xe3, 0xe7, 0x2b, 0x11, 0x8f, 0x18, 0x09, 0xb8, 0x92, 0xb9, 0xed, 0xe7, 0x2b,
-	0xfc, 0x12, 0x3a, 0xa5, 0x27, 0xe8, 0x14, 0x1a, 0x84, 0x31, 0xca, 0x24, 0xd3, 0xf1, 0xd5, 0x02,
-	0x8f, 0xa1, 0x6f, 0xcd, 0xc4, 0xa1, 0x33, 0xf0, 0x2b, 0xe8, 0x1a, 0xa6, 0xe9, 0x6c, 0x8e, 0x99,
-	0xed, 0x3f, 0xe8, 0x99, 0x13, 0x83, 0x31, 0x80, 0xf6, 0xee, 0xc0, 0x9e, 0x29, 0x80, 0x9e, 0x1c,
-	0x84, 0xa0, 0xce, 0x7f, 0xad, 0x16, 0x12, 0xa9, 0xfb, 0xf2, 0x1b, 0x0d, 0xa0, 0xb6, 0x26, 0x3b,
-	0x79, 0xef, 0x9e, 0x2f, 0x3e, 0xf1, 0x2d, 0xb4, 0x0b, 0xa7, 0x45, 0xd6, 0xc7, 0x20, 0xce, 0xd4,
-	0x7d, 0x7b, 0xbe, 0x5a, 0x1c, 0xa8, 0xf6, 0x0e, 0x40, 0x4f, 0xdf, 0xbf, 0x9d, 0xa5, 0xf3, 0xd7,
-	0x8c, 0xfc, 0xf8, 0x1c, 0xda, 0x45, 0x17, 0x1d, 0xa8, 0x6b, 0x04, 0x3d, 0x73, 0x7e, 0x05, 0xc5,
-	0x83, 0x30, 0x26, 0xc5, 0x8d, 0xe4, 0x02, 0xdf, 0x02, 0xe8, 0x2e, 0xdb, 0x7b, 0xa3, 0xfd, 0x95,
-	0x7c, 0x84, 0xbe, 0x35, 0xee, 0x7b, 0xb7, 0x22, 0xa8, 0x6f, 0x77, 0x49, 0x94, 0x77, 0x85, 0xfc,
-	0x16, 0x3e, 0x1a, 0x9d, 0x7a, 0xe0, 0xee, 0x17, 0xf0, 0x7f, 0xe5, 0x65, 0xd8, 0x97, 0x1f, 0x5f,
-	0x40, 0xdf, 0x6a, 0xe2, 0xfd, 0xd9, 0xa6, 0x1e, 0x34, 0xee, 0xc5, 0xf3, 0x8e, 0x3e, 0x01, 0xcc,
-	0x68, 0x92, 0x90, 0x88, 0xaf, 0x68, 0x82, 0xca, 0x77, 0xa3, 0x7c, 0xe2, 0x5f, 0x94, 0x93, 0xa7,
-	0x1f, 0x1b, 0x7c, 0x74, 0xe9, 0xbc, 0x77, 0xbc, 0x31, 0x9c, 0x44, 0x74, 0x33, 0x61, 0x34, 0x0c,
-	0x7e, 0xd0, 0x89, 0xfa, 0x5b, 0x78, 0x83, 0x7b, 0xb2, 0xfb, 0xe2, 0xf9, 0x72, 0xcb, 0x5c, 0xfc,
-	0x39, 0xe6, 0x4e, 0xd8, 0x94, 0xbf, 0x90, 0x9b, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x40, 0x93,
-	0x97, 0x81, 0x52, 0x06, 0x00, 0x00,
+var fileDescriptor_keydbr_074d29b91536a168 = []byte{
+	// 759 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x96, 0x5f, 0x4f, 0xdb, 0x3a,
+	0x14, 0xc0, 0x49, 0xff, 0xf7, 0xb4, 0x85, 0xe2, 0xc2, 0x25, 0xf7, 0x3e, 0x71, 0x0d, 0x0c, 0x86,
+	0xd6, 0x32, 0x15, 0x8d, 0x69, 0x9a, 0xf6, 0x52, 0x26, 0x8d, 0x89, 0x6d, 0xa0, 0x3c, 0xec, 0xbd,
+	0x2d, 0x67, 0xac, 0x6a, 0x1a, 0x67, 0xa9, 0xc3, 0xe8, 0xe7, 0xdc, 0x97, 0xd8, 0xc7, 0x98, 0xfc,
+	0x27, 0x89, 0x1d, 0x1a, 0x69, 0x6f, 0xf1, 0xd1, 0xcf, 0xe7, 0xd8, 0xf9, 0xd9, 0x27, 0x81, 0xf6,
+	0x1c, 0x57, 0x77, 0x93, 0x68, 0x10, 0x46, 0x8c, 0x33, 0x52, 0x8b, 0x70, 0xc1, 0x38, 0xd2, 0xdf,
+	0x65, 0x68, 0x7e, 0x0c, 0x3e, 0xe3, 0x72, 0x39, 0xbe, 0x47, 0xf2, 0x1c, 0x2a, 0x2c, 0xc4, 0xc0,
+	0x75, 0xf6, 0x9d, 0x93, 0xd6, 0xb0, 0x37, 0x50, 0xd0, 0xe0, 0x26, 0xc4, 0xc0, 0xc3, 0x1f, 0x31,
+	0x2e, 0xf9, 0xd5, 0x86, 0x27, 0x11, 0x72, 0x06, 0x32, 0xc5, 0x03, 0xba, 0x25, 0x09, 0xef, 0x26,
+	0xb0, 0x27, 0xa3, 0x19, 0xae, 0x31, 0xf2, 0x02, 0xaa, 0x53, 0x9f, 0x2d, 0xd1, 0x2d, 0x4b, 0x7e,
+	0x27, 0xe1, 0x2f, 0x45, 0x30, 0xc3, 0x15, 0x44, 0x9e, 0x41, 0xf9, 0x1e, 0xb9, 0x5b, 0x91, 0x2c,
+	0x49, 0xd8, 0x0f, 0xc8, 0x33, 0x52, 0x00, 0x82, 0x0b, 0x63, 0xee, 0x56, 0x6d, 0xee, 0x36, 0x36,
+	0xb9, 0x30, 0xe6, 0xa2, 0xfa, 0x04, 0xef, 0x67, 0x81, 0x5b, 0xb3, 0xab, 0x8f, 0x44, 0xd0, 0xa8,
+	0x2e, 0x21, 0xb1, 0xb9, 0x29, 0x5b, 0x2c, 0x66, 0xdc, 0xad, 0xdb, 0x9b, 0xbb, 0x94, 0x51, 0x63,
+	0x73, 0x0a, 0x23, 0xaf, 0xa0, 0x11, 0x31, 0xdf, 0x9f, 0x8c, 0xa7, 0x73, 0xb7, 0x21, 0xa7, 0xec,
+	0xa5, 0xef, 0x43, 0xc7, 0xb3, 0x49, 0x29, 0x2a, 0xea, 0xf8, 0x8c, 0xcd, 0xe3, 0xd0, 0x6d, 0xda,
+	0x75, 0x3e, 0xc9, 0xa8, 0x51, 0x47, 0x61, 0xe4, 0x0c, 0x2a, 0x01, 0x3e, 0x72, 0x17, 0x24, 0xfe,
+	0xaf, 0x8d, 0x7f, 0xc1, 0x47, 0x63, 0x69, 0x12, 0x1c, 0x35, 0xa1, 0x1e, 0xa9, 0x10, 0xfd, 0x55,
+	0x06, 0xb8, 0x89, 0x79, 0xe2, 0xfa, 0xd8, 0x72, 0xbd, 0x6d, 0xbb, 0x0e, 0xfd, 0x55, 0x6a, 0xba,
+	0x9f, 0x33, 0xdd, 0xcb, 0x9b, 0x56, 0x70, 0xe2, 0xf9, 0xd4, 0xf6, 0x4c, 0x72, 0x9e, 0x15, 0xac,
+	0x2d, 0x1f, 0x9a, 0x96, 0xbb, 0x96, 0x65, 0xc5, 0x49, 0xc7, 0x87, 0xa6, 0xe3, 0xae, 0xe5, 0x58,
+	0x53, 0xc2, 0xf0, 0xa9, 0x6d, 0x98, 0xe4, 0x0c, 0xeb, 0xba, 0xca, 0x6f, 0x3f, 0xe7, 0xb7, 0x97,
+	0xf7, 0xab, 0xb7, 0xa4, 0xed, 0x9e, 0x3f, 0xb1, 0xbb, 0xfb, 0xd4, 0xae, 0x9a, 0x92, 0xb9, 0xed,
+	0xe7, 0xdc, 0xf6, 0xf2, 0x6e, 0x75, 0x0d, 0x6d, 0xb6, 0x6f, 0x99, 0xdd, 0x5b, 0x67, 0x56, 0x4b,
+	0x91, 0x5e, 0xeb, 0x50, 0x8d, 0x44, 0x80, 0xbe, 0x83, 0x96, 0x71, 0x3d, 0xc9, 0x3f, 0x50, 0xbb,
+	0x9b, 0x04, 0xe3, 0x05, 0x4a, 0xaf, 0x4d, 0x4f, 0x8f, 0x44, 0x7c, 0x1a, 0xe1, 0x98, 0x2b, 0x89,
+	0x0d, 0x4f, 0x8f, 0xe8, 0xff, 0xd0, 0x4c, 0x8d, 0x93, 0x1d, 0xa8, 0x62, 0x14, 0xb1, 0x48, 0x32,
+	0x4d, 0x4f, 0x0d, 0xe8, 0x31, 0x74, 0xac, 0x3b, 0x5d, 0x54, 0x83, 0x1e, 0x40, 0xcb, 0x38, 0x12,
+	0x59, 0x36, 0xc7, 0xcc, 0xb6, 0x09, 0x6d, 0xf3, 0xc6, 0x53, 0x0a, 0x90, 0x9d, 0x8c, 0x82, 0x39,
+	0x43, 0x80, 0xec, 0xe6, 0x13, 0x02, 0x15, 0xfe, 0x38, 0xbb, 0x93, 0x48, 0xc5, 0x93, 0xcf, 0xa4,
+	0x0b, 0xe5, 0x39, 0xae, 0xe4, 0xba, 0xdb, 0x9e, 0x78, 0xa4, 0x17, 0xd0, 0x48, 0xce, 0x91, 0xc8,
+	0xfa, 0x30, 0xf6, 0x63, 0xb5, 0xde, 0xb6, 0xa7, 0x06, 0x05, 0xbb, 0xbd, 0x02, 0xc8, 0xba, 0xc7,
+	0xdf, 0xd5, 0xca, 0xf2, 0x97, 0x8d, 0xfc, 0x74, 0x1f, 0x1a, 0xc9, 0x19, 0x2d, 0xd8, 0xd7, 0x21,
+	0xb4, 0xcd, 0xfe, 0x23, 0x28, 0x3e, 0x9e, 0xf8, 0x98, 0xac, 0x48, 0x0e, 0xe8, 0x05, 0x40, 0x76,
+	0x86, 0xd7, 0xae, 0x68, 0xfd, 0x4e, 0x5e, 0x43, 0xc7, 0x6a, 0x57, 0x6b, 0xa7, 0x12, 0xa8, 0x2c,
+	0x57, 0xc1, 0x54, 0x9f, 0x0a, 0xf9, 0x2c, 0x3c, 0x1a, 0xf7, 0xa0, 0x60, 0xed, 0x47, 0xb0, 0x95,
+	0xeb, 0x6c, 0xeb, 0xf2, 0xd3, 0x23, 0xe8, 0x58, 0x57, 0xa4, 0x20, 0xdb, 0x5b, 0xe8, 0x58, 0x2d,
+	0x4f, 0x60, 0x3e, 0xfb, 0x89, 0x51, 0xa2, 0x4c, 0x0e, 0x44, 0x34, 0x0e, 0x43, 0x8c, 0xf4, 0xcb,
+	0x57, 0x03, 0x7a, 0x0e, 0x2d, 0xe3, 0x4e, 0x91, 0x4d, 0x28, 0xa5, 0x8b, 0x28, 0x15, 0xbe, 0x9d,
+	0x03, 0xd8, 0x7e, 0xd2, 0x35, 0xf3, 0x53, 0xe9, 0x10, 0x1a, 0xd7, 0xb8, 0xfa, 0x2a, 0x8f, 0x8b,
+	0xd6, 0xee, 0xac, 0xd1, 0x5e, 0x32, 0xb5, 0xdf, 0xc0, 0x56, 0xee, 0xd2, 0x92, 0x53, 0xa8, 0x63,
+	0xc0, 0xa3, 0x19, 0x2e, 0x5d, 0x67, 0xbf, 0x6c, 0x36, 0xb1, 0x24, 0xbb, 0x97, 0x00, 0xa2, 0x0c,
+	0xb2, 0x6f, 0xda, 0x87, 0x78, 0x1c, 0x8e, 0xa0, 0x7a, 0x2d, 0x3e, 0xdd, 0xe4, 0x0d, 0xc0, 0x25,
+	0x0b, 0x02, 0x9c, 0xf2, 0x19, 0x0b, 0x48, 0xda, 0xb1, 0xd3, 0xcf, 0xf7, 0x7f, 0x69, 0xcf, 0xcb,
+	0xda, 0x3c, 0xdd, 0x38, 0x71, 0x5e, 0x3a, 0xa3, 0x63, 0xd8, 0x9e, 0xb2, 0xc5, 0x20, 0x62, 0x93,
+	0xf1, 0x77, 0x36, 0x50, 0x7f, 0x02, 0xa3, 0xee, 0x35, 0xae, 0xde, 0x8f, 0x3c, 0x39, 0xe5, 0x56,
+	0xfc, 0x15, 0xdc, 0x3a, 0x93, 0x9a, 0xfc, 0x3d, 0x38, 0xff, 0x13, 0x00, 0x00, 0xff, 0xff, 0xcc,
+	0x75, 0x74, 0xe9, 0x2e, 0x08, 0x00, 0x00,
 }
