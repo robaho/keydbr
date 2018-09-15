@@ -17,4 +17,4 @@ There is a sample command line client in cmd/client which uses the client API.
 
 **TODOs**
 
-Need to implement remote iteration
+Implement "read ahead" for more efficient lookup over the network

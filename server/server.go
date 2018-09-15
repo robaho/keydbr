@@ -16,8 +16,10 @@ type openDatabase struct {
 }
 
 type connstate struct {
-	db  *openDatabase
-	txs map[uint64]*keydb.Transaction
+	db   *openDatabase
+	txs  map[uint64]*keydb.Transaction
+	itrs map[uint64]keydb.LookupIterator
+	next uint64 // next iterator id
 }
 
 type Server struct {
@@ -33,7 +35,7 @@ func NewServer(dbpath string) *Server {
 
 func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
-	state := connstate{txs: make(map[uint64]*keydb.Transaction)}
+	state := connstate{txs: make(map[uint64]*keydb.Transaction), itrs: make(map[uint64]keydb.LookupIterator)}
 
 	defer s.closedb(&state, true)
 
@@ -61,6 +63,10 @@ func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 			err = s.get(conn, &state, msg.GetRequest().(*pb.InMessage_Get).Get)
 		case *pb.InMessage_Put:
 			err = s.put(conn, &state, msg.GetRequest().(*pb.InMessage_Put).Put)
+		case *pb.InMessage_Lookup:
+			err = s.lookup(conn, &state, msg.GetRequest().(*pb.InMessage_Lookup).Lookup)
+		case *pb.InMessage_Next:
+			err = s.lookupNext(conn, &state, msg.GetRequest().(*pb.InMessage_Next).Next)
 		}
 
 		if err != nil {
@@ -215,5 +221,49 @@ func (s *Server) put(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.Pu
 	}
 
 	reply := &pb.OutMessage_Put{Put: &pb.PutReply{Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+
+func (s *Server) lookup(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.LookupRequest) error {
+
+	var err error
+	var id uint64
+	tx, ok := state.txs[in.Txid]
+	if !ok {
+		err = errors.New("invalid tx id")
+	} else {
+		itr, err0 := tx.Lookup(in.Lower, in.Upper)
+		if err0 == nil {
+			state.next++
+			id = state.next
+			state.itrs[id] = itr
+		}
+		err = err0
+	}
+
+	reply := &pb.OutMessage_Lookup{Lookup: &pb.LookupReply{Id: id, Error: toErrS(err)}}
+	return conn.Send(&pb.OutMessage{Reply: reply})
+}
+
+func (s *Server) lookupNext(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.LookupNextRequest) error {
+
+	var err error
+	var entries []*pb.KeyValue
+
+	itr, ok := state.itrs[in.Id]
+	if !ok {
+		err = errors.New("invalid iterator id")
+	} else {
+		entries = make([]*pb.KeyValue, 1)
+		key, value, err0 := itr.Next()
+		kv := pb.KeyValue{Key: key, Value: value}
+		entries[0] = &kv
+		err = err0
+		if err != nil {
+			delete(state.itrs, in.Id)
+		}
+	}
+
+	reply := &pb.OutMessage_Next{Next: &pb.LookupNextReply{Entries: entries, Error: toErrS(err)}}
 	return conn.Send(&pb.OutMessage{Reply: reply})
 }

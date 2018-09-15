@@ -125,8 +125,9 @@ message RollbackReply {
 }
 
 message LookupRequest {
-    bytes lower = 1;
-    bytes upper = 2;
+    uint64 txid = 1;
+    bytes lower = 2;
+    bytes upper = 3;
 }
 
 message LookupReply {
@@ -145,7 +146,7 @@ message KeyValue {
 
 message LookupNextReply {
     repeated KeyValue entries = 1;
-    bool eof = 2;
+    string error=2;
 }
 
 

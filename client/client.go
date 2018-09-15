@@ -19,6 +19,10 @@ type RemoteTransaction struct {
 	txid uint64
 	db   *RemoteDatabase
 }
+type RemoteIterator struct {
+	id uint64
+	db *RemoteDatabase
+}
 
 func Open(addr string, dbname string, createIfNeeded bool, timeout int) (*RemoteDatabase, error) {
 	// Set up a connection to the server.
@@ -208,4 +212,50 @@ func (tx *RemoteTransaction) Rollback() error {
 	}
 
 	return nil
+}
+
+func (tx *RemoteTransaction) Lookup(lower []byte, upper []byte) (*RemoteIterator, error) {
+	request := &pb.InMessage_Lookup{Lookup: &pb.LookupRequest{Txid: tx.txid, Lower: lower, Upper: upper}}
+
+	err := tx.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return nil, err
+	}
+
+	msg, err := tx.db.stream.Recv()
+	if err != nil {
+		return nil, err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Lookup).Lookup
+
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+
+	ri := RemoteIterator{id: response.Id, db: tx.db}
+
+	return &ri, nil
+}
+
+func (itr *RemoteIterator) Next() (key []byte, value []byte, err error) {
+	request := &pb.InMessage_Next{Next: &pb.LookupNextRequest{Id: itr.id}}
+
+	err = itr.db.stream.Send(&pb.InMessage{Request: request})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	msg, err := itr.db.stream.Recv()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	response := msg.GetReply().(*pb.OutMessage_Next).Next
+
+	if response.Error != "" {
+		return nil, nil, errors.New(response.Error)
+	}
+
+	return response.Entries[0].Key, response.Entries[0].Value, nil
 }
