@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestBasic(t *testing.T) {
+var addr = "localhost:8501"
+var dbname = "main"
 
-	addr := "localhost:8501"
-	dbname := "main"
+func TestBasic(t *testing.T) {
 
 	db, err := client.Open(addr, dbname, true, 10)
 	if err != nil {
@@ -47,9 +47,6 @@ func TestBasic(t *testing.T) {
 }
 
 func TestRollback(t *testing.T) {
-
-	addr := "localhost:8501"
-	dbname := "main"
 
 	db, err := client.Open(addr, dbname, true, 10)
 	if err != nil {
@@ -91,9 +88,6 @@ func TestRollback(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-
-	addr := "localhost:8501"
-	dbname := "main"
 
 	db, err := client.Open(addr, dbname, true, 10)
 	if err != nil {
