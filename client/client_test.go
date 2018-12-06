@@ -16,7 +16,7 @@ func TestBasic(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	tx, err := db.Begin("test")
+	tx, err := db.BeginTX("test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestRollback(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	tx, err := db.Begin("test")
+	tx, err := db.BeginTX("test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func TestLookup(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	tx, err := db.Begin("test")
+	tx, err := db.BeginTX("test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestLookup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tx, err = db.Begin("test")
+	tx, err = db.BeginTX("test")
 	if err != nil {
 		t.Fatal(err)
 	}

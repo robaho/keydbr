@@ -91,7 +91,37 @@ func (db *RemoteDatabase) Close() error {
 	return nil
 }
 
-func (db *RemoteDatabase) Begin(table string) (*RemoteTransaction, error) {
+func Remove(addr string, dbname string, timeout int) error {
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	client := pb.NewKeydbClient(conn)
+
+	//timeoutSecs := time.Second * time.Duration(timeout)
+
+	ctx := context.Background()
+
+	request := &pb.RemoveRequest{}
+	request.Dbname = dbname
+
+	response, err := client.Remove(ctx, request)
+
+	if err != nil {
+		return err
+	}
+
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}
+
+func (db *RemoteDatabase) BeginTX(table string) (*RemoteTransaction, error) {
 
 	request := &pb.InMessage_Begin{Begin: &pb.BeginRequest{Table: table}}
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"github.com/robaho/keydb"
 	pb "github.com/robaho/keydbr/internal/proto"
@@ -31,6 +32,25 @@ type Server struct {
 func NewServer(dbpath string) *Server {
 	s := Server{path: dbpath, opendb: make(map[string]*openDatabase)}
 	return &s
+}
+
+func (s *Server) Remove(ctx context.Context, in *pb.RemoveRequest) (*pb.RemoveReply, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	log.Println("remove database", in)
+
+	fullpath := filepath.Join(s.path, in.GetDbname())
+
+	err := keydb.Remove(fullpath)
+	errs := ""
+	if err != nil {
+		errs = err.Error()
+	}
+
+	reply := &pb.RemoveReply{Error: errs}
+
+	return reply, nil
 }
 
 func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {

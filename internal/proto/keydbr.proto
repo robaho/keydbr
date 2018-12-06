@@ -22,12 +22,12 @@ package remote;
 
 service Keydb {
     rpc Connection (stream InMessage) returns (stream OutMessage) {}
+    rpc Remove(RemoveRequest) returns (RemoveReply) {}
 }
 
 message InMessage {
     oneof request {
         OpenRequest open = 1;
-        RemoveRequest remove = 2;
         CloseRequest close = 3;
         GetRequest get = 4;
         PutRequest put = 5;
@@ -42,7 +42,6 @@ message InMessage {
 message OutMessage {
     oneof reply {
         OpenReply open = 1;
-        RemoveReply remove = 2;
         CloseReply close = 3;
         GetReply get = 4;
         PutReply put = 5;
