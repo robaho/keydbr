@@ -20,8 +20,10 @@ type RemoteTransaction struct {
 	db   *RemoteDatabase
 }
 type RemoteIterator struct {
-	id uint64
-	db *RemoteDatabase
+	id      uint64
+	db      *RemoteDatabase
+	entries []*pb.KeyValue
+	index   int
 }
 
 func Open(addr string, dbname string, createIfNeeded bool, timeout int) (*RemoteDatabase, error) {
@@ -170,11 +172,21 @@ func (tx *RemoteTransaction) Get(key []byte) ([]byte, error) {
 	return response.Value, nil
 }
 
+// Put stores a key/value asynchronously for performance. error will be nil, but a subsequent Commit will fail
 func (tx *RemoteTransaction) Put(key []byte, value []byte) error {
+	return tx.put(key, value, false)
+}
+
+//PutSync stores a key/value pair waiting for confirmation from the remote server
+func (tx *RemoteTransaction) PutSync(key []byte, value []byte) error {
+	return tx.put(key, value, true)
+}
+
+func (tx *RemoteTransaction) put(key []byte, value []byte, sync bool) error {
 	request := &pb.InMessage_Put{Put: &pb.PutRequest{Txid: tx.txid, Key: key, Value: value}}
 
 	err := tx.db.stream.Send(&pb.InMessage{Request: request})
-	if err != nil {
+	if err != nil || !sync {
 		return err
 	}
 
@@ -269,6 +281,12 @@ func (tx *RemoteTransaction) Lookup(lower []byte, upper []byte) (*RemoteIterator
 }
 
 func (itr *RemoteIterator) Next() (key []byte, value []byte, err error) {
+	if itr.index < len(itr.entries) {
+		key, value = itr.entries[itr.index].Key, itr.entries[itr.index].Value
+		itr.index++
+		return
+	}
+
 	request := &pb.InMessage_Next{Next: &pb.LookupNextRequest{Id: itr.id}}
 
 	err = itr.db.stream.Send(&pb.InMessage{Request: request})
@@ -287,5 +305,9 @@ func (itr *RemoteIterator) Next() (key []byte, value []byte, err error) {
 		return nil, nil, errors.New(response.Error)
 	}
 
-	return response.Entries[0].Key, response.Entries[0].Value, nil
+	itr.entries = response.Entries
+	key, value = itr.entries[0].Key, itr.entries[0].Value
+	itr.index = 1
+
+	return
 }

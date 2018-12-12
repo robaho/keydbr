@@ -16,9 +16,14 @@ type openDatabase struct {
 	fullpath string
 }
 
+type transaction struct {
+	*keydb.Transaction
+	asyncfailure bool
+}
+
 type connstate struct {
 	db   *openDatabase
-	txs  map[uint64]*keydb.Transaction
+	txs  map[uint64]*transaction
 	itrs map[uint64]keydb.LookupIterator
 	next uint64 // next iterator id
 }
@@ -55,7 +60,7 @@ func (s *Server) Remove(ctx context.Context, in *pb.RemoveRequest) (*pb.RemoveRe
 
 func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
-	state := connstate{txs: make(map[uint64]*keydb.Transaction), itrs: make(map[uint64]keydb.LookupIterator)}
+	state := connstate{txs: make(map[uint64]*transaction), itrs: make(map[uint64]keydb.LookupIterator)}
 
 	defer s.closedb(&state, true)
 
@@ -172,7 +177,7 @@ func (s *Server) begin(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.
 	tx, err := state.db.db.BeginTX(in.Table)
 	if err == nil {
 		id = tx.GetID()
-		state.txs[id] = tx
+		state.txs[id] = &transaction{Transaction: tx}
 	}
 	reply := &pb.OutMessage_Begin{Begin: &pb.BeginReply{Txid: id, Error: toErrS(err)}}
 	return conn.Send(&pb.OutMessage{Reply: reply})
@@ -184,6 +189,9 @@ func (s *Server) commit(conn pb.Keydb_ConnectionServer, state *connstate, in *pb
 	if !ok {
 		err = errors.New("invalid tx id")
 	} else {
+		if tx.asyncfailure {
+			return errors.New("async put failure")
+		}
 		if in.Sync {
 			err = tx.CommitSync()
 		} else {
@@ -240,6 +248,13 @@ func (s *Server) put(conn pb.Keydb_ConnectionServer, state *connstate, in *pb.Pu
 		err = tx.Put(in.Key, in.Value)
 	}
 
+	if !in.Sync {
+		if err != nil {
+			tx.asyncfailure = true
+		}
+		return nil
+	}
+
 	reply := &pb.OutMessage_Put{Put: &pb.PutReply{Error: toErrS(err)}}
 	return conn.Send(&pb.OutMessage{Reply: reply})
 }
@@ -274,13 +289,25 @@ func (s *Server) lookupNext(conn pb.Keydb_ConnectionServer, state *connstate, in
 	if !ok {
 		err = errors.New("invalid iterator id")
 	} else {
-		entries = make([]*pb.KeyValue, 1)
-		key, value, err0 := itr.Next()
-		kv := pb.KeyValue{Key: key, Value: value}
-		entries[0] = &kv
-		err = err0
-		if err != nil {
-			delete(state.itrs, in.Id)
+		// read up to 64 entries
+		count := 0
+
+		entries = make([]*pb.KeyValue, 64)[:0]
+		for count < 64 {
+			key, value, err0 := itr.Next()
+			err = err0
+			if err == nil {
+				kv := pb.KeyValue{Key: key, Value: value}
+				entries = append(entries, &kv)
+			} else {
+				if count > 0 {
+					err = nil
+					break
+				}
+				delete(state.itrs, in.Id)
+				break
+			}
+			count++
 		}
 	}
 

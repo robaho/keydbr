@@ -91,6 +91,7 @@ message PutRequest {
     uint64 txid = 1;
     bytes key = 2;
     bytes value = 3;
+    bool sync =4;
 }
 
 message PutReply {
