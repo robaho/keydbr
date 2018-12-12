@@ -57,7 +57,7 @@ func Open(addr string, dbname string, createIfNeeded bool, timeout int) (*Remote
 		return nil, err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Open).Open
+	response := msg.GetOpen()
 
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
@@ -80,7 +80,7 @@ func (db *RemoteDatabase) Close() error {
 		return err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Close).Close
+	response := msg.GetClose()
 
 	if response.Error != "" {
 		return errors.New(response.Error)
@@ -135,7 +135,7 @@ func (db *RemoteDatabase) BeginTX(table string) (*RemoteTransaction, error) {
 		return nil, err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Begin).Begin
+	response := msg.GetBegin()
 
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
@@ -161,7 +161,7 @@ func (tx *RemoteTransaction) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Get).Get
+	response := msg.GetGet()
 
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
@@ -183,7 +183,7 @@ func (tx *RemoteTransaction) Put(key []byte, value []byte) error {
 		return err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Put).Put
+	response := msg.GetPut()
 
 	if response.Error != "" {
 		return errors.New(response.Error)
@@ -205,7 +205,7 @@ func (tx *RemoteTransaction) commitOption(sync bool) error {
 		return err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Commit).Commit
+	response := msg.GetCommit()
 
 	if response.Error != "" {
 		return errors.New(response.Error)
@@ -235,7 +235,7 @@ func (tx *RemoteTransaction) Rollback() error {
 		return err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Rollback).Rollback
+	response := msg.GetRollback()
 
 	if response.Error != "" {
 		return errors.New(response.Error)
@@ -257,7 +257,7 @@ func (tx *RemoteTransaction) Lookup(lower []byte, upper []byte) (*RemoteIterator
 		return nil, err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Lookup).Lookup
+	response := msg.GetLookup()
 
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
@@ -281,7 +281,7 @@ func (itr *RemoteIterator) Next() (key []byte, value []byte, err error) {
 		return nil, nil, err
 	}
 
-	response := msg.GetReply().(*pb.OutMessage_Next).Next
+	response := msg.GetNext()
 
 	if response.Error != "" {
 		return nil, nil, errors.New(response.Error)

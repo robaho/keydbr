@@ -68,25 +68,25 @@ func (s *Server) Connection(conn pb.Keydb_ConnectionServer) error {
 
 		switch msg.Request.(type) {
 		case *pb.InMessage_Open:
-			err = s.open(conn, &state, msg.GetRequest().(*pb.InMessage_Open).Open)
+			err = s.open(conn, &state, msg.GetOpen())
 		case *pb.InMessage_Close:
 			err = s.closedb(&state, false)
 			reply := &pb.OutMessage_Close{Close: &pb.CloseReply{Error: toErrS(err)}}
 			err = conn.Send(&pb.OutMessage{Reply: reply})
 		case *pb.InMessage_Begin:
-			err = s.begin(conn, &state, msg.GetRequest().(*pb.InMessage_Begin).Begin)
+			err = s.begin(conn, &state, msg.GetBegin())
 		case *pb.InMessage_Commit:
-			err = s.commit(conn, &state, msg.GetRequest().(*pb.InMessage_Commit).Commit)
+			err = s.commit(conn, &state, msg.GetCommit())
 		case *pb.InMessage_Rollback:
-			err = s.rollback(conn, &state, msg.GetRequest().(*pb.InMessage_Rollback).Rollback)
+			err = s.rollback(conn, &state, msg.GetRollback())
 		case *pb.InMessage_Get:
-			err = s.get(conn, &state, msg.GetRequest().(*pb.InMessage_Get).Get)
+			err = s.get(conn, &state, msg.GetGet())
 		case *pb.InMessage_Put:
-			err = s.put(conn, &state, msg.GetRequest().(*pb.InMessage_Put).Put)
+			err = s.put(conn, &state, msg.GetPut())
 		case *pb.InMessage_Lookup:
-			err = s.lookup(conn, &state, msg.GetRequest().(*pb.InMessage_Lookup).Lookup)
+			err = s.lookup(conn, &state, msg.GetLookup())
 		case *pb.InMessage_Next:
-			err = s.lookupNext(conn, &state, msg.GetRequest().(*pb.InMessage_Next).Next)
+			err = s.lookupNext(conn, &state, msg.GetNext())
 		}
 
 		if err != nil {
