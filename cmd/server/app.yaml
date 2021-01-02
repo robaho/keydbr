@@ -1,0 +1,4 @@
+runtime: go111
+network:
+  forwarded_ports:
+  - 8080/tcp

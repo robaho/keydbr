@@ -20,15 +20,15 @@ There is a sample command line client in cmd/client which uses the client API.
 Using the same 'performance' test as keydb, but using the remote layer:
 
 <pre>
-insert time  1000000 records =  5770 ms, usec per op  5
-close time  3088 ms
-scan time  5558 ms, usec per op  5
-scan time 50%  2626 ms, usec per op  5
-random access time  137 us per get
-close time  1002 ms
-scan time  5397 ms, usec per op  5
-scan time 50%  2624 ms, usec per op  5
-random access time  136 us per get
+insert time  1000000 records =  3080 ms, usec per op  3.08019
+close time  1700 ms
+scan time  2129 ms, usec per op  2.129979
+scan time 50%  1468 ms, usec per op  2.93625
+random access time  83.98727 us per get
+close time  1000 ms
+scan time  1963 ms, usec per op  1.963984
+scan time 50%  930 ms, usec per op  1.861844
+random access time  82.95168 us per get
 </pre>
 
 **TODOs**

@@ -42,15 +42,15 @@ func main() {
 	tx.CommitSync()
 
 	end := time.Now()
-	duration := end.Sub(start).Nanoseconds()
+	duration := end.Sub(start).Microseconds()
 
-	fmt.Println("insert time ", nr, "records = ", duration/1000000.0, "ms, usec per op ", (duration/1000)/nr)
+	fmt.Println("insert time ", nr, "records = ", duration/1000, "ms, usec per op ", float64(duration)/nr)
 	start = time.Now()
 	err = db.Close()
 	end = time.Now()
-	duration = end.Sub(start).Nanoseconds()
+	duration = end.Sub(start).Microseconds()
 
-	fmt.Println("close time ", duration/1000000.0, "ms")
+	fmt.Println("close time ", (duration)/1000, "ms")
 	if err != nil {
 		panic(err)
 	}
@@ -65,9 +65,9 @@ func main() {
 	db.Close()
 
 	end = time.Now()
-	duration = end.Sub(start).Nanoseconds()
+	duration = end.Sub(start).Microseconds()
 
-	fmt.Println("close time ", duration/1000000.0, "ms")
+	fmt.Println("close time ", duration/1000, "ms")
 
 	testRead()
 }
@@ -95,9 +95,9 @@ func testRead() {
 		log.Fatal("incorrect count != ", nr, ", count is ", count)
 	}
 	end := time.Now()
-	duration := end.Sub(start).Nanoseconds()
+	duration := end.Sub(start).Microseconds()
 
-	fmt.Println("scan time ", duration/1000000.0, "ms, usec per op ", (duration/1000)/nr)
+	fmt.Println("scan time ", duration/1000, "ms, usec per op ", float64(duration)/nr)
 
 	start = time.Now()
 	itr, err = tx.Lookup([]byte("mykey 300000"), []byte("mykey 799999"))
@@ -113,9 +113,9 @@ func testRead() {
 		log.Fatal("incorrect count != 500000, count is ", count)
 	}
 	end = time.Now()
-	duration = end.Sub(start).Nanoseconds()
+	duration = end.Sub(start).Microseconds()
 
-	fmt.Println("scan time 50% ", duration/1000000.0, "ms, usec per op ", (duration/1000)/500000)
+	fmt.Println("scan time 50% ", duration/1000, "ms, usec per op ", float64(duration)/500000)
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -129,9 +129,9 @@ func testRead() {
 		}
 	}
 	end = time.Now()
-	duration = end.Sub(start).Nanoseconds()
+	duration = end.Sub(start).Microseconds()
 
-	fmt.Println("random access time ", (duration/1000.0)/int64(nr/10.0), "us per get")
+	fmt.Println("random access time ", float64(duration)/(nr/10), "us per get")
 
 	tx.Rollback()
 
