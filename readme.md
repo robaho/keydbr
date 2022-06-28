@@ -5,9 +5,8 @@ Remote access to keydb database. Uses Google protobufs and gRPC.
 **Notes**
 
 There is a single gRPC stream per open database,
-upon which all requests are multiplexed. The client API automatically locks the stream until the previous request is
-acknowledged, but this may change in the future to allow overlapping requests - that is, asynchronous handling
-by the server.
+upon which all requests are multiplexed. The stream is shared but requests are completed synchronously (since the server processes an inbound message synchronously) but this may change in the future to allow overlapping requests - that is, asynchronous handling
+by the server. For best performance, multiple connections should be made to the server, rather than sharing a database connection.
 
 **To Use**
 
