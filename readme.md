@@ -1,3 +1,5 @@
+## keydbr is deprecated. Use [robaho/leveldbr](http://www.github.com/robaho/leveldbr) which is stable and uses an api based on Google's LevelDB.
+
 **About**
 
 Remote access to keydb database. Uses Google protobufs and gRPC.
